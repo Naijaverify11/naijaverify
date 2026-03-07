@@ -1,0 +1,2002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NaijaVerify.ng — Know the Real Gist Before You Pay</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-deep: #0a3d2e;
+  --green-mid: #145a3c;
+  --green-light: #1e7a52;
+  --green-bright: #27ae60;
+  --gold: #c9a84c;
+  --gold-light: #e8c96d;
+  --gold-pale: #f5e6b8;
+  --cream: #faf7f0;
+  --white: #ffffff;
+  --dark: #0d1f17;
+  --gray-100: #f4f4f2;
+  --gray-200: #e8e8e4;
+  --gray-400: #9a9a94;
+  --gray-600: #5a5a54;
+  --red: #e74c3c;
+  --orange: #e67e22;
+  --blue: #2980b9;
+  --shadow-sm: 0 2px 8px rgba(10,61,46,0.08);
+  --shadow-md: 0 8px 32px rgba(10,61,46,0.12);
+  --shadow-lg: 0 16px 64px rgba(10,61,46,0.16);
+  --radius: 16px;
+  --radius-sm: 8px;
+  --radius-lg: 24px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--dark);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* LAYOUT */
+.app-shell {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--cream);
+  position: relative;
+  padding-bottom: 80px;
+  box-shadow: 0 0 80px rgba(0,0,0,0.15);
+}
+
+/* SCREENS */
+.screen { display: none; animation: fadeIn 0.3s ease; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 430px;
+  background: var(--white);
+  border-top: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  height: 72px;
+  z-index: 100;
+  box-shadow: 0 -8px 32px rgba(10,61,46,0.08);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 12px;
+  transition: all 0.2s;
+  flex: 1;
+}
+.nav-item:hover { background: var(--gray-100); }
+.nav-item.active .nav-icon { color: var(--green-light); }
+.nav-item.active .nav-label { color: var(--green-light); font-weight: 600; }
+.nav-icon { font-size: 20px; color: var(--gray-400); transition: all 0.2s; }
+.nav-label { font-size: 10px; color: var(--gray-400); font-weight: 500; letter-spacing: 0.3px; }
+
+.nav-write {
+  background: linear-gradient(135deg, var(--green-light), var(--green-deep));
+  border-radius: 50%;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(30,122,82,0.4);
+  transition: all 0.2s;
+  margin-top: -20px;
+  flex-shrink: 0;
+}
+.nav-write:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(30,122,82,0.5); }
+
+/* ============ SCREEN 1: HOME ============ */
+.home-header {
+  background: linear-gradient(160deg, var(--green-deep) 0%, var(--green-mid) 60%, var(--green-light) 100%);
+  padding: 48px 20px 32px;
+  position: relative;
+  overflow: hidden;
+}
+.home-header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, rgba(201,168,76,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.home-header::after {
+  content: '';
+  position: absolute;
+  bottom: -30px; left: -30px;
+  width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(201,168,76,0.1) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  position: relative; z-index: 1;
+}
+
+.logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--white);
+  letter-spacing: -0.5px;
+}
+.logo span { color: var(--gold); }
+
+.header-actions { display: flex; gap: 8px; }
+.icon-btn {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: white; font-size: 16px;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+}
+.icon-btn:hover { background: rgba(255,255,255,0.2); }
+
+.header-greeting { position: relative; z-index: 1; margin-bottom: 20px; }
+.greeting-sub { color: rgba(255,255,255,0.6); font-size: 13px; margin-bottom: 4px; }
+.greeting-main { color: var(--white); font-size: 18px; font-weight: 600; }
+
+.search-bar {
+  position: relative; z-index: 1;
+  background: rgba(255,255,255,0.95);
+  border-radius: var(--radius);
+  display: flex; align-items: center;
+  padding: 12px 16px;
+  gap: 10px;
+  box-shadow: var(--shadow-md);
+}
+.search-bar input {
+  flex: 1; border: none; outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; color: var(--dark);
+  background: transparent;
+}
+.search-bar input::placeholder { color: var(--gray-400); }
+.search-icon { color: var(--green-light); font-size: 18px; }
+.search-location {
+  background: var(--green-deep);
+  color: white;
+  border: none; border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 11px; font-weight: 600;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  white-space: nowrap;
+}
+
+/* QUICK CATEGORIES */
+.section { padding: 24px 20px 0; }
+.section-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 700;
+  color: var(--green-deep);
+}
+.see-all {
+  font-size: 13px; color: var(--green-light);
+  font-weight: 600; cursor: pointer;
+  text-decoration: none;
+}
+
+.category-scroll {
+  display: flex; gap: 12px;
+  overflow-x: auto; padding-bottom: 8px;
+  scrollbar-width: none;
+}
+.category-scroll::-webkit-scrollbar { display: none; }
+
+.cat-pill {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  cursor: pointer; flex-shrink: 0;
+  transition: all 0.2s;
+}
+.cat-pill:hover { transform: translateY(-2px); }
+.cat-icon-wrap {
+  width: 60px; height: 60px;
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  transition: all 0.2s;
+}
+.cat-pill:hover .cat-icon-wrap { box-shadow: var(--shadow-md); }
+.cat-label { font-size: 11px; font-weight: 600; color: var(--gray-600); text-align: center; max-width: 60px; line-height: 1.3; }
+
+.cat-banks { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
+.cat-gov { background: linear-gradient(135deg, #fff3e0, #ffe0b2); }
+.cat-food { background: linear-gradient(135deg, #fce4ec, #f8bbd9); }
+.cat-work { background: linear-gradient(135deg, #e3f2fd, #bbdefb); }
+.cat-travel { background: linear-gradient(135deg, #f3e5f5, #e1bee7); }
+.cat-books { background: linear-gradient(135deg, #fff8e1, #ffecb3); }
+.cat-health { background: linear-gradient(135deg, #e0f7fa, #b2ebf2); }
+.cat-artisan { background: linear-gradient(135deg, #efebe9, #d7ccc8); }
+
+/* TRUST BADGES */
+.trust-strip {
+  margin: 20px;
+  background: linear-gradient(135deg, var(--gold-pale), #fff9e6);
+  border: 1px solid var(--gold-light);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.trust-icon { font-size: 24px; }
+.trust-text strong { display: block; font-size: 13px; color: var(--green-deep); font-weight: 700; }
+.trust-text span { font-size: 11px; color: var(--gray-600); }
+
+/* ARRIVALS HUB */
+.arrivals-card {
+  margin: 0 20px;
+  background: linear-gradient(135deg, var(--green-deep), var(--green-mid));
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+}
+.arrivals-card::after {
+  content: '✈️';
+  position: absolute;
+  right: 20px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 48px; opacity: 0.3;
+}
+.arrivals-tag {
+  background: var(--gold);
+  color: var(--green-deep);
+  font-size: 10px; font-weight: 700;
+  padding: 3px 8px; border-radius: 4px;
+  display: inline-block; margin-bottom: 8px;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.arrivals-title { color: white; font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.arrivals-sub { color: rgba(255,255,255,0.7); font-size: 12px; }
+
+/* REVIEW FEED */
+.review-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--gray-200);
+}
+.review-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+.review-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 12px;
+}
+.biz-avatar {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; flex-shrink: 0;
+}
+.biz-info { flex: 1; }
+.biz-name { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 2px; }
+.biz-meta { font-size: 11px; color: var(--gray-400); }
+.verified-badge {
+  background: var(--green-bright); color: white;
+  font-size: 10px; font-weight: 700;
+  padding: 3px 7px; border-radius: 6px;
+  letter-spacing: 0.3px;
+}
+
+.stars { color: var(--gold); font-size: 13px; margin-bottom: 6px; }
+.review-text { font-size: 13px; color: var(--gray-600); line-height: 1.5; margin-bottom: 10px; }
+.review-footer { display: flex; justify-content: space-between; align-items: center; }
+.reviewer-info { display: flex; align-items: center; gap: 6px; }
+.reviewer-avatar {
+  width: 24px; height: 24px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--green-light), var(--green-deep));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: white; font-weight: 700;
+}
+.reviewer-name { font-size: 11px; color: var(--gray-400); font-weight: 600; }
+.review-actions { display: flex; gap: 12px; }
+.action-btn { font-size: 11px; color: var(--gray-400); cursor: pointer; display: flex; align-items: center; gap: 3px; }
+.action-btn:hover { color: var(--green-light); }
+
+/* VIBE METER */
+.vibe-meter {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 8px;
+}
+.vibe-label { font-size: 11px; color: var(--gray-600); font-weight: 600; min-width: 70px; }
+.vibe-bar-wrap {
+  flex: 1; height: 6px;
+  background: var(--gray-200); border-radius: 3px; overflow: hidden;
+}
+.vibe-bar { height: 100%; border-radius: 3px; }
+.vibe-green { background: linear-gradient(90deg, var(--green-bright), #2ecc71); }
+.vibe-orange { background: linear-gradient(90deg, var(--orange), #f39c12); }
+.vibe-red { background: linear-gradient(90deg, var(--red), #c0392b); }
+.vibe-pct { font-size: 11px; font-weight: 700; color: var(--gray-600); min-width: 30px; text-align: right; }
+
+/* NPS BADGE */
+.nps-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: #e8f5e9; color: var(--green-deep);
+  font-size: 11px; font-weight: 700;
+  padding: 3px 8px; border-radius: 6px;
+}
+
+/* POS TRACKER */
+.pos-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.pos-tag {
+  font-size: 10px; font-weight: 600; padding: 3px 8px;
+  border-radius: 6px; display: flex; align-items: center; gap: 3px;
+}
+.pos-yes { background: #e8f5e9; color: var(--green-deep); }
+.pos-no { background: #fce4ec; color: #c62828; }
+
+/* ============ SCREEN 2: EXPLORE ============ */
+.map-container {
+  height: 300px;
+  background: linear-gradient(160deg, #c8e6c9, #a5d6a7, #81c784);
+  position: relative; overflow: hidden;
+}
+.map-overlay {
+  position: absolute; inset: 0;
+  background: url("data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%23a5d6a7' width='400' height='300'/%3E%3Cpath d='M0,150 Q100,100 200,150 T400,150' stroke='%2381c784' fill='none' stroke-width='2'/%3E%3Ccircle cx='80' cy='120' r='3' fill='%230a3d2e'/%3E%3Ccircle cx='200' cy='90' r='3' fill='%230a3d2e'/%3E%3Ccircle cx='320' cy='140' r='3' fill='%230a3d2e'/%3E%3Ctext x='60' y='115' font-size='9' fill='%230a3d2e' font-family='sans-serif'%3ELekki%3C/text%3E%3Ctext x='185' y='85' font-size='9' fill='%230a3d2e' font-family='sans-serif'%3EVI%3C/text%3E%3Ctext x='305' y='135' font-size='9' fill='%230a3d2e' font-family='sans-serif'%3EIkeja%3C/text%3E%3C/svg%3E") center/cover;
+}
+.map-pin {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; transition: all 0.2s;
+}
+.map-pin:hover { transform: scale(1.1); }
+.pin-dot {
+  width: 36px; height: 36px; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-md);
+}
+.pin-dot span { transform: rotate(45deg); font-size: 14px; }
+.pin-label {
+  background: white; font-size: 9px; font-weight: 700;
+  padding: 2px 5px; border-radius: 4px; white-space: nowrap;
+  box-shadow: var(--shadow-sm); margin-top: 4px;
+  color: var(--dark);
+}
+.pin-green .pin-dot { background: var(--green-light); }
+.pin-gold .pin-dot { background: var(--gold); }
+.pin-red .pin-dot { background: var(--red); }
+
+.map-overlay-ui {
+  position: absolute; top: 12px; left: 12px; right: 12px;
+  display: flex; gap: 8px;
+}
+.map-search {
+  flex: 1; background: white; border-radius: 12px;
+  display: flex; align-items: center; padding: 10px 14px; gap: 8px;
+  box-shadow: var(--shadow-md);
+}
+.map-search input { flex: 1; border: none; outline: none; font-size: 13px; font-family: 'DM Sans', sans-serif; }
+.map-filter-btn {
+  background: var(--green-deep); color: white;
+  border: none; border-radius: 10px; padding: 10px 14px;
+  cursor: pointer; font-size: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.filter-chips {
+  position: absolute; bottom: 12px; left: 12px;
+  display: flex; gap: 6px; overflow-x: auto;
+}
+.filter-chip {
+  background: white; border: 1px solid rgba(255,255,255,0.8);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 11px; font-weight: 600; color: var(--green-deep);
+  cursor: pointer; white-space: nowrap; box-shadow: var(--shadow-sm);
+  transition: all 0.2s;
+}
+.filter-chip.active { background: var(--green-deep); color: white; }
+
+.explore-results { padding: 20px; }
+.result-card {
+  background: white; border-radius: var(--radius);
+  padding: 14px; margin-bottom: 10px;
+  display: flex; gap: 12px; align-items: center;
+  box-shadow: var(--shadow-sm); cursor: pointer;
+  transition: all 0.2s; border: 1px solid var(--gray-200);
+}
+.result-card:hover { box-shadow: var(--shadow-md); }
+.result-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0;
+}
+.result-info { flex: 1; }
+.result-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.result-meta { font-size: 11px; color: var(--gray-400); margin-bottom: 4px; }
+.result-footer { display: flex; align-items: center; gap: 8px; }
+.result-rating { font-size: 12px; color: var(--gold); font-weight: 700; }
+.result-dist { font-size: 11px; color: var(--gray-400); }
+.result-trust { background: var(--gold-pale); color: var(--green-deep); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+
+/* ============ SCREEN 3: BOOK NOOK ============ */
+.nook-header {
+  background: linear-gradient(160deg, #1a0a2e, #2d1254, #4a1f7a);
+  padding: 48px 20px 28px;
+  position: relative; overflow: hidden;
+}
+.nook-header::before {
+  content: '📚';
+  position: absolute; right: 20px; top: 40px;
+  font-size: 80px; opacity: 0.15;
+}
+.nook-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 900;
+  color: white; margin-bottom: 6px;
+}
+.nook-title span { color: var(--gold); }
+.nook-sub { color: rgba(255,255,255,0.6); font-size: 13px; }
+
+.trending-strip {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 10px 14px;
+  margin-top: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.trending-dot { width: 8px; height: 8px; background: var(--gold); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+.trending-text { font-size: 12px; color: rgba(255,255,255,0.8); }
+.trending-text strong { color: white; }
+
+.isbn-scanner {
+  margin: 20px;
+  background: linear-gradient(135deg, var(--green-deep), var(--green-mid));
+  border-radius: var(--radius-lg); padding: 20px;
+  display: flex; align-items: center; gap: 16px;
+  cursor: pointer; transition: all 0.2s;
+}
+.isbn-scanner:hover { transform: scale(1.01); box-shadow: var(--shadow-lg); }
+.scanner-icon {
+  width: 56px; height: 56px; background: rgba(255,255,255,0.1);
+  border: 2px dashed rgba(255,255,255,0.3);
+  border-radius: 14px; display: flex; align-items: center;
+  justify-content: center; font-size: 26px;
+}
+.scanner-text strong { display: block; color: white; font-size: 15px; margin-bottom: 3px; }
+.scanner-text span { color: rgba(255,255,255,0.6); font-size: 12px; }
+
+.shelf-tabs {
+  display: flex; gap: 0; margin: 0 20px 16px;
+  background: var(--gray-100); border-radius: 10px; padding: 3px;
+}
+.shelf-tab {
+  flex: 1; padding: 8px; text-align: center;
+  font-size: 12px; font-weight: 600; color: var(--gray-400);
+  border-radius: 8px; cursor: pointer; transition: all 0.2s;
+}
+.shelf-tab.active { background: white; color: var(--green-deep); box-shadow: var(--shadow-sm); }
+
+.book-card {
+  background: white; border-radius: var(--radius);
+  margin: 0 20px 12px;
+  display: flex; gap: 14px; padding: 14px;
+  box-shadow: var(--shadow-sm); cursor: pointer;
+  transition: all 0.2s; border: 1px solid var(--gray-200);
+}
+.book-card:hover { box-shadow: var(--shadow-md); }
+.book-cover {
+  width: 70px; height: 95px; border-radius: 6px;
+  flex-shrink: 0; display: flex; align-items: center;
+  justify-content: center; font-size: 32px;
+  box-shadow: 4px 4px 12px rgba(0,0,0,0.15);
+}
+.book-info { flex: 1; }
+.book-title { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 3px; line-height: 1.3; }
+.book-author { font-size: 12px; color: var(--gray-400); margin-bottom: 8px; }
+.naija-tag {
+  background: var(--gold-pale); color: var(--green-deep);
+  font-size: 10px; font-weight: 700; padding: 2px 7px;
+  border-radius: 4px; display: inline-block; margin-bottom: 6px;
+}
+.book-stats { display: flex; gap: 10px; align-items: center; }
+.book-rating { color: var(--gold); font-size: 12px; font-weight: 700; }
+.book-reviews { font-size: 11px; color: var(--gray-400); }
+.buy-btn {
+  background: var(--green-deep); color: white;
+  border: none; border-radius: 8px; padding: 6px 12px;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  align-self: flex-end;
+}
+
+.author-spotlight {
+  margin: 0 20px 20px;
+  background: linear-gradient(135deg, #fff8e1, #fff3c4);
+  border: 1px solid var(--gold-light);
+  border-radius: var(--radius); padding: 16px;
+}
+.spotlight-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.spotlight-icon { font-size: 18px; }
+.spotlight-title { font-size: 13px; font-weight: 700; color: var(--green-deep); }
+.author-list { display: flex; gap: 12px; overflow-x: auto; }
+.author-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
+.author-avatar {
+  width: 52px; height: 52px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; border: 2px solid var(--gold-light);
+}
+.author-name { font-size: 10px; font-weight: 600; color: var(--dark); text-align: center; max-width: 55px; line-height: 1.3; }
+.follow-btn {
+  font-size: 9px; background: var(--green-deep); color: white;
+  border: none; border-radius: 4px; padding: 2px 6px;
+  cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 700;
+}
+
+/* ============ SCREEN 4: WRITE ============ */
+.write-header {
+  background: white;
+  padding: 48px 20px 20px;
+  border-bottom: 1px solid var(--gray-200);
+}
+.write-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--green-deep); margin-bottom: 6px; }
+.write-sub { font-size: 13px; color: var(--gray-400); }
+
+.review-type-select { padding: 20px; }
+.type-card {
+  background: white; border: 2px solid var(--gray-200);
+  border-radius: var(--radius); padding: 18px;
+  margin-bottom: 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 14px;
+  transition: all 0.2s;
+}
+.type-card:hover, .type-card.selected {
+  border-color: var(--green-light);
+  box-shadow: 0 0 0 3px rgba(30,122,82,0.1);
+}
+.type-icon-wrap {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+}
+.type-info strong { display: block; font-size: 15px; color: var(--dark); margin-bottom: 3px; }
+.type-info span { font-size: 12px; color: var(--gray-400); }
+.type-arrow { margin-left: auto; color: var(--gray-400); font-size: 18px; }
+
+.review-form { padding: 20px; display: none; }
+.review-form.active { display: block; }
+
+.form-section { margin-bottom: 20px; }
+.form-label { font-size: 13px; font-weight: 700; color: var(--dark); margin-bottom: 8px; display: block; }
+.form-sub { font-size: 11px; color: var(--gray-400); margin-bottom: 8px; }
+
+.org-search {
+  display: flex; gap: 8px; align-items: center;
+  background: var(--gray-100); border-radius: 10px; padding: 12px 14px;
+}
+.org-search input { flex: 1; border: none; outline: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 14px; }
+
+.star-rating-row { display: flex; gap: 4px; margin-bottom: 6px; }
+.star { font-size: 28px; cursor: pointer; transition: all 0.15s; filter: grayscale(1); opacity: 0.4; }
+.star.lit { filter: none; opacity: 1; }
+.star:hover { transform: scale(1.15); }
+
+.rating-item { margin-bottom: 16px; }
+.rating-name { font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
+
+.nps-container { padding: 16px; background: var(--gray-100); border-radius: 12px; }
+.nps-question { font-size: 13px; font-weight: 600; color: var(--dark); margin-bottom: 12px; }
+.nps-scale { display: flex; gap: 3px; }
+.nps-num {
+  flex: 1; height: 36px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  border: 2px solid var(--gray-200); background: white;
+  transition: all 0.15s; color: var(--gray-600);
+}
+.nps-num:hover, .nps-num.selected { border-color: var(--green-light); background: var(--green-deep); color: white; }
+.nps-labels { display: flex; justify-content: space-between; margin-top: 6px; }
+.nps-labels span { font-size: 10px; color: var(--gray-400); }
+
+.form-input {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--gray-200);
+  border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; transition: all 0.2s; background: white; color: var(--dark);
+}
+.form-input:focus { border-color: var(--green-light); box-shadow: 0 0 0 3px rgba(30,122,82,0.1); }
+
+.form-textarea {
+  width: 100%; padding: 12px 14px; border: 2px solid var(--gray-200);
+  border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 14px;
+  outline: none; transition: all 0.2s; resize: none; height: 100px; background: white;
+}
+.form-textarea:focus { border-color: var(--green-light); box-shadow: 0 0 0 3px rgba(30,122,82,0.1); }
+
+.voice-btn {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--green-deep); color: white;
+  border: none; border-radius: 10px; padding: 10px 16px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600;
+  cursor: pointer; margin-top: 8px;
+}
+
+.proof-upload {
+  border: 2px dashed var(--gray-200); border-radius: 12px;
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: all 0.2s;
+}
+.proof-upload:hover { border-color: var(--green-light); background: rgba(30,122,82,0.02); }
+.upload-icon { font-size: 28px; margin-bottom: 6px; }
+.upload-text { font-size: 12px; color: var(--gray-400); }
+.upload-sub { font-size: 10px; color: var(--gray-400); }
+
+.anon-toggle {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--gray-100); border-radius: 12px; padding: 14px;
+}
+.anon-mask { font-size: 24px; }
+.anon-text strong { display: block; font-size: 13px; color: var(--dark); }
+.anon-text span { font-size: 11px; color: var(--gray-400); }
+.toggle {
+  margin-left: auto;
+  width: 44px; height: 24px; border-radius: 12px;
+  background: var(--green-light); cursor: pointer;
+  position: relative; transition: all 0.3s;
+}
+.toggle::after {
+  content: ''; position: absolute;
+  top: 2px; left: 22px; width: 20px; height: 20px;
+  background: white; border-radius: 50%;
+  transition: all 0.3s; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.submit-btn {
+  width: 100%; padding: 16px; border: none;
+  background: linear-gradient(135deg, var(--green-light), var(--green-deep));
+  color: white; font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 700; border-radius: var(--radius);
+  cursor: pointer; transition: all 0.2s; margin-top: 8px;
+  box-shadow: 0 4px 16px rgba(30,122,82,0.3);
+}
+.submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(30,122,82,0.4); }
+
+.back-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px;
+  font-weight: 600; color: var(--green-light); padding: 16px 20px 0;
+}
+
+/* ============ SCREEN 5: PROFILE ============ */
+.profile-header {
+  background: linear-gradient(160deg, var(--green-deep), var(--green-mid));
+  padding: 48px 20px 24px;
+  position: relative; overflow: hidden;
+}
+.profile-header::after {
+  content: '';
+  position: absolute; bottom: -40px; right: -40px;
+  width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(201,168,76,0.2) 0%, transparent 70%);
+  border-radius: 50%;
+}
+.profile-top { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.profile-avatar {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: 700; color: var(--green-deep);
+  border: 3px solid rgba(255,255,255,0.3);
+  flex-shrink: 0;
+}
+.profile-name { font-size: 18px; font-weight: 700; color: white; margin-bottom: 3px; }
+.profile-handle { font-size: 12px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+.profile-level {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--gold); color: var(--green-deep);
+  font-size: 11px; font-weight: 800; padding: 3px 10px;
+  border-radius: 20px; letter-spacing: 0.5px;
+}
+
+.profile-stats {
+  display: flex; gap: 0;
+  background: rgba(255,255,255,0.08); border-radius: var(--radius);
+  overflow: hidden;
+}
+.stat-item { flex: 1; padding: 14px 12px; text-align: center; }
+.stat-item + .stat-item { border-left: 1px solid rgba(255,255,255,0.1); }
+.stat-val { font-size: 22px; font-weight: 700; color: white; display: block; }
+.stat-label { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 500; margin-top: 2px; }
+
+.street-cred {
+  margin: 20px; background: white;
+  border-radius: var(--radius); padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+.cred-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.cred-title { font-size: 14px; font-weight: 700; color: var(--dark); }
+.cred-points { font-family: 'Space Mono', monospace; font-size: 20px; color: var(--gold); font-weight: 700; }
+.cred-bar-wrap { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+.cred-bar { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); width: 65%; border-radius: 4px; }
+.cred-sub { font-size: 11px; color: var(--gray-400); }
+
+.badges-section { margin: 0 20px 20px; }
+.badges-title { font-size: 14px; font-weight: 700; color: var(--dark); margin-bottom: 12px; }
+.badge-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.badge-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
+.badge-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.badge-name { font-size: 9px; font-weight: 600; color: var(--gray-600); text-align: center; }
+.badge-earned { opacity: 1; }
+.badge-locked { opacity: 0.35; filter: grayscale(1); }
+
+.activity-feed { padding: 0 20px; }
+.activity-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 12px 0; border-bottom: 1px solid var(--gray-100);
+}
+.activity-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; margin-top: 2px; }
+.activity-text { font-size: 13px; color: var(--dark); line-height: 1.5; }
+.activity-text span { color: var(--green-light); font-weight: 600; }
+.activity-time { font-size: 10px; color: var(--gray-400); margin-top: 3px; }
+
+.settings-list { padding: 0 20px 20px; }
+.settings-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0; border-bottom: 1px solid var(--gray-100);
+  cursor: pointer; transition: all 0.2s;
+}
+.settings-item:hover { padding-left: 4px; }
+.settings-icon { font-size: 20px; width: 28px; }
+.settings-label { font-size: 14px; font-weight: 500; color: var(--dark); flex: 1; }
+.settings-arrow { color: var(--gray-400); font-size: 16px; }
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--green-deep); color: white;
+  padding: 12px 20px; border-radius: 12px;
+  font-size: 13px; font-weight: 600;
+  box-shadow: var(--shadow-lg); z-index: 200;
+  opacity: 0; transition: all 0.3s; max-width: 380px;
+  text-align: center; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 150; display: none; align-items: flex-end;
+}
+.modal-overlay.open { display: flex; }
+.modal-sheet {
+  background: white; border-radius: 24px 24px 0 0;
+  width: 100%; max-width: 430px; margin: 0 auto;
+  padding: 24px 20px 40px;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.modal-handle { width: 40px; height: 4px; background: var(--gray-200); border-radius: 2px; margin: 0 auto 20px; }
+.modal-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: var(--green-deep); margin-bottom: 16px; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-200); border-radius: 2px; }
+
+/* DIVIDERS */
+.divider { height: 8px; background: var(--gray-100); margin: 16px 0; }
+
+/* TAGLINE TICKER */
+.ticker {
+  background: var(--gold);
+  padding: 8px 0; overflow: hidden;
+  white-space: nowrap;
+}
+.ticker-inner {
+  display: inline-block;
+  animation: ticker 25s linear infinite;
+}
+.ticker span {
+  font-size: 11px; font-weight: 700; color: var(--green-deep);
+  padding: 0 20px;
+}
+@keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
+/* WORKPLACE PROFILE CARD */
+.workplace-card {
+  background: white; border-radius: var(--radius);
+  margin: 0 20px 12px; overflow: hidden;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
+  cursor: pointer; transition: all 0.2s;
+}
+.workplace-card:hover { box-shadow: var(--shadow-md); }
+.wc-header {
+  padding: 16px; display: flex; gap: 12px; align-items: center;
+}
+.wc-avatar { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.wc-info { flex: 1; }
+.wc-name { font-size: 14px; font-weight: 700; color: var(--dark); }
+.wc-sub { font-size: 11px; color: var(--gray-400); }
+.wc-vibe { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+.vibe-healthy { background: #e8f5e9; color: var(--green-deep); }
+.vibe-toxic { background: #fce4ec; color: var(--red); }
+.vibe-neutral { background: #fff3e0; color: var(--orange); }
+.wc-metrics { padding: 0 16px 16px; }
+.salary-score {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--gray-100); border-radius: 10px; padding: 10px 14px;
+  margin-bottom: 8px;
+}
+.salary-label { font-size: 12px; color: var(--gray-600); font-weight: 600; }
+.salary-val { font-family: 'Space Mono', monospace; font-size: 14px; color: var(--green-deep); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span>🇳🇬 Know the Real Gist Before You Pay</span>
+      <span>⭐ 736+ Nigerian Organizations Listed</span>
+      <span>🔒 Anonymous Workplace Reviews</span>
+      <span>📚 Book Nook — Nigeria's Goodreads</span>
+      <span>✈️ Arrivals Hub for Diaspora</span>
+      <span>💰 Salary Transparency Tool</span>
+      <span>🇳🇬 Know the Real Gist Before You Pay</span>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 1: HOME ===== -->
+  <div class="screen active" id="screen-home">
+    <div class="home-header">
+      <div class="header-top">
+        <div class="logo">Naija<span>Verify</span>.ng</div>
+        <div class="header-actions">
+          <div class="icon-btn" onclick="showToast('🔔 3 new notifications')">🔔</div>
+          <div class="icon-btn" onclick="showToast('👤 Opening profile...')">👤</div>
+        </div>
+      </div>
+      <div class="header-greeting">
+        <div class="greeting-sub">📍 Lagos, Nigeria</div>
+        <div class="greeting-main">Know the Real Gist Before You Pay 🇳🇬</div>
+      </div>
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search best Amala, safest bank in Lekki...">
+        <button class="search-location" onclick="showToast('📍 Using current location')">Near Me</button>
+      </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Browse Categories</div>
+        <a class="see-all" onclick="switchScreen('explore')">See Map →</a>
+      </div>
+      <div class="category-scroll">
+        <div class="cat-pill" onclick="showToast('🏦 Loading Banks...')">
+          <div class="cat-icon-wrap cat-banks">🏦</div>
+          <div class="cat-label">Banks & FinTech</div>
+        </div>
+        <div class="cat-pill" onclick="showToast('🏛️ Loading Government Services...')">
+          <div class="cat-icon-wrap cat-gov">🏛️</div>
+          <div class="cat-label">Govt Services</div>
+        </div>
+        <div class="cat-pill" onclick="showToast('🍲 Loading Restaurants...')">
+          <div class="cat-icon-wrap cat-food">🍲</div>
+          <div class="cat-label">Food & Dining</div>
+        </div>
+        <div class="cat-pill" onclick="showToast('💼 Loading Workplaces...')">
+          <div class="cat-icon-wrap cat-work">💼</div>
+          <div class="cat-label">Workplaces</div>
+        </div>
+        <div class="cat-pill" onclick="showToast('✈️ Loading Travel Guide...')">
+          <div class="cat-icon-wrap cat-travel">✈️</div>
+          <div class="cat-label">Travel & Hotels</div>
+        </div>
+        <div class="cat-pill" onclick="switchScreen('nook')">
+          <div class="cat-icon-wrap cat-books">📚</div>
+          <div class="cat-label">Book Nook</div>
+        </div>
+        <div class="cat-pill" onclick="showToast('🏥 Loading Healthcare...')">
+          <div class="cat-icon-wrap cat-health">🏥</div>
+          <div class="cat-label">Health</div>
+        </div>
+        <div class="cat-pill" onclick="showToast('🔧 Loading Artisans...')">
+          <div class="cat-icon-wrap cat-artisan">🔧</div>
+          <div class="cat-label">Artisans</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ARRIVALS HUB -->
+    <div style="padding: 20px 20px 0;">
+      <div class="arrivals-card" onclick="showArrivalModal()">
+        <div class="arrivals-tag">FOR DIASPORA & TRAVELERS</div>
+        <div class="arrivals-title">Arrivals Hub 🌍</div>
+        <div class="arrivals-sub">Top 5 Banks for Diaspora · Safest Short-lets · Best Airport Transfers</div>
+      </div>
+    </div>
+
+    <!-- TRUST BADGE -->
+    <div class="trust-strip">
+      <div class="trust-icon">🏅</div>
+      <div class="trust-text">
+        <strong>NaijaVerify Trust Badge</strong>
+        <span>Businesses with 4.5+ rating for 6 months earn this badge</span>
+      </div>
+    </div>
+
+    <!-- TRENDING WORKPLACE REVIEWS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Workplace Vibes</div>
+        <a class="see-all" onclick="showToast('Loading all workplaces...')">See All</a>
+      </div>
+    </div>
+
+    <div class="workplace-card" onclick="showWorkplaceModal()">
+      <div class="wc-header">
+        <div class="wc-avatar" style="background:#e8f5e9;">🏦</div>
+        <div class="wc-info">
+          <div class="wc-name">GTBank (GTCO)</div>
+          <div class="wc-sub">Banking · Lagos · 247 employee reviews</div>
+        </div>
+        <div class="wc-vibe vibe-healthy">🟢 Healthy</div>
+      </div>
+      <div class="wc-metrics">
+        <div class="vibe-meter">
+          <div class="vibe-label">Work Culture</div>
+          <div class="vibe-bar-wrap"><div class="vibe-bar vibe-green" style="width:78%"></div></div>
+          <div class="vibe-pct">78%</div>
+        </div>
+        <div class="vibe-meter">
+          <div class="vibe-label">Leadership</div>
+          <div class="vibe-bar-wrap"><div class="vibe-bar vibe-orange" style="width:61%"></div></div>
+          <div class="vibe-pct">61%</div>
+        </div>
+        <div class="vibe-meter">
+          <div class="vibe-label">Work-Life</div>
+          <div class="vibe-bar-wrap"><div class="vibe-bar vibe-green" style="width:70%"></div></div>
+          <div class="vibe-pct">70%</div>
+        </div>
+        <div class="salary-score">
+          <div class="salary-label">💰 Salary Punctuality</div>
+          <div class="salary-val">94% paid on 26th</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="workplace-card" onclick="showWorkplaceModal()">
+      <div class="wc-header">
+        <div class="wc-avatar" style="background:#fce4ec;">🏛️</div>
+        <div class="wc-info">
+          <div class="wc-name">FIRS — Federal Inland Revenue</div>
+          <div class="wc-sub">Public Service · Abuja · 89 reviews</div>
+        </div>
+        <div class="wc-vibe vibe-neutral">🟡 Mixed</div>
+      </div>
+      <div class="wc-metrics">
+        <div class="vibe-meter">
+          <div class="vibe-label">Work Culture</div>
+          <div class="vibe-bar-wrap"><div class="vibe-bar vibe-orange" style="width:52%"></div></div>
+          <div class="vibe-pct">52%</div>
+        </div>
+        <div class="vibe-meter">
+          <div class="vibe-label">Management</div>
+          <div class="vibe-bar-wrap"><div class="vibe-bar vibe-red" style="width:38%"></div></div>
+          <div class="vibe-pct">38%</div>
+        </div>
+        <div class="salary-score">
+          <div class="salary-label">💰 Salary Punctuality</div>
+          <div class="salary-val">71% paid on time</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- FOOD REVIEWS -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Hot Reviews Near You 🔥</div>
+        <a class="see-all" onclick="showToast('Loading all reviews...')">See All</a>
+      </div>
+    </div>
+
+    <div style="padding: 0 20px 20px;">
+      <div class="review-card" onclick="showBizModal()">
+        <div class="review-header">
+          <div class="biz-avatar" style="background:#fce4ec;">🍲</div>
+          <div class="biz-info">
+            <div class="biz-name">Amala Shitta, Surulere</div>
+            <div class="biz-meta">Local Cuisine · Lagos · 0.8km away</div>
+          </div>
+          <div class="verified-badge">✓ Verified</div>
+        </div>
+        <div class="stars">⭐⭐⭐⭐⭐ <span style="font-size:11px;color:var(--gray-400);">(4.9)</span></div>
+        <div class="pos-tags">
+          <div class="pos-tag pos-yes">✅ POS Available</div>
+          <div class="pos-tag pos-yes">✅ 24/7 Power</div>
+          <div class="pos-tag pos-yes">✅ Secure Parking</div>
+        </div>
+        <div class="review-text" style="margin-top:8px;">"This place is on another level. The amala and ewedu combo will fix your soul. Tables are clean, generator is always on, and the POS never fails. Area Father approved! 🙌"</div>
+        <div class="review-footer">
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">AS</div>
+            <div class="reviewer-name">Abuja Surveyor · Area Father 🏆</div>
+          </div>
+          <div class="review-actions">
+            <div class="action-btn" onclick="event.stopPropagation(); showToast('👍 Helpful!')">👍 42</div>
+            <div class="action-btn" onclick="event.stopPropagation(); showToast('💬 Opening thread...')">💬 8</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card" onclick="showBizModal()">
+        <div class="review-header">
+          <div class="biz-avatar" style="background:#e3f2fd;">🏦</div>
+          <div class="biz-info">
+            <div class="biz-name">Zenith Bank Plc — VI Branch</div>
+            <div class="biz-meta">Banking · Victoria Island · 1.2km</div>
+          </div>
+          <div class="nps-badge">NPS: 8/10</div>
+        </div>
+        <div class="stars">⭐⭐⭐⭐ <span style="font-size:11px;color:var(--gray-400);">(4.1)</span></div>
+        <div class="review-text">"Account opening was surprisingly smooth — 45 minutes total. Staff were professional, the AC was working (rare!), and the POS at the counter didn't fail once. Recommend for diaspora accounts."</div>
+        <div class="review-footer">
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">LT</div>
+            <div class="reviewer-name">London Tunde · Senior Man 🥈</div>
+          </div>
+          <div class="review-actions">
+            <div class="action-btn" onclick="event.stopPropagation(); showToast('👍 Helpful!')">👍 31</div>
+            <div class="action-btn" onclick="event.stopPropagation();">💬 5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-card" onclick="showBizModal()">
+        <div class="review-header">
+          <div class="biz-avatar" style="background:#fff3e0;">🏛️</div>
+          <div class="biz-info">
+            <div class="biz-name">Nigeria Immigration Service</div>
+            <div class="biz-meta">Public Service · Abuja · Government</div>
+          </div>
+          <span style="background:#fce4ec;color:var(--red);font-size:10px;font-weight:700;padding:3px 7px;border-radius:6px;">⚠️ Alert</span>
+        </div>
+        <div class="stars">⭐⭐ <span style="font-size:11px;color:var(--gray-400);">(2.1)</span></div>
+        <div class="review-text">"Passport renewal took 6 weeks, 3 visits, and ₦15,000 in 'processing fees' that weren't on the website. Queue system is nonexistent. Government needs to do better. Submitted Public Service Report."</div>
+        <div class="review-footer">
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">IC</div>
+            <div class="reviewer-name">Ikeja Citizen · Area Father 🏆</div>
+          </div>
+          <div class="review-actions">
+            <div class="action-btn" onclick="event.stopPropagation(); showToast('📢 Report shared on social media!')">📢 Share Report</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 2: EXPLORE ===== -->
+  <div class="screen" id="screen-explore">
+    <div class="map-container">
+      <div class="map-overlay"></div>
+
+      <!-- Map Pins -->
+      <div class="map-pin pin-green" style="left:18%;top:35%;" onclick="showToast('🍲 Amala Shitta — ⭐4.9 · 0.8km')">
+        <div class="pin-dot"><span>🍲</span></div>
+        <div class="pin-label">Amala Shitta</div>
+      </div>
+      <div class="map-pin pin-gold" style="left:50%;top:25%;" onclick="showToast('🏦 Zenith Bank VI — ⭐4.1 · 1.2km')">
+        <div class="pin-dot"><span>🏦</span></div>
+        <div class="pin-label">Zenith Bank</div>
+      </div>
+      <div class="map-pin pin-red" style="left:72%;top:50%;" onclick="showToast('🏛️ NIMC Office — ⭐2.3 · 3.1km')">
+        <div class="pin-dot"><span>🏛️</span></div>
+        <div class="pin-label">NIMC Office</div>
+      </div>
+      <div class="map-pin pin-green" style="left:35%;top:60%;" onclick="showToast('🏨 Eko Hotels — ⭐4.6 · 2.0km')">
+        <div class="pin-dot"><span>🏨</span></div>
+        <div class="pin-label">Eko Hotels</div>
+      </div>
+      <div class="map-pin pin-gold" style="left:62%;top:20%;" onclick="showToast('📚 Roving Heights — ⭐4.8 · 4.5km')">
+        <div class="pin-dot"><span>📚</span></div>
+        <div class="pin-label">Roving Heights</div>
+      </div>
+
+      <div class="map-overlay-ui">
+        <div class="map-search">
+          <span>🔍</span>
+          <input type="text" placeholder="e.g., Behind Zenith Bank, Allen Ave...">
+        </div>
+        <button class="map-filter-btn" onclick="showToast('🎛️ Filters opened')">⚙️</button>
+      </div>
+      <div class="filter-chips">
+        <div class="filter-chip active" onclick="toggleChip(this)">All</div>
+        <div class="filter-chip" onclick="toggleChip(this)">🍲 Food</div>
+        <div class="filter-chip" onclick="toggleChip(this)">🏦 Banks</div>
+        <div class="filter-chip" onclick="toggleChip(this)">🏛️ Gov't</div>
+        <div class="filter-chip" onclick="toggleChip(this)">🏨 Hotels</div>
+        <div class="filter-chip" onclick="toggleChip(this)">📚 Books</div>
+      </div>
+    </div>
+
+    <div class="explore-results">
+      <div class="section-header" style="margin-bottom:12px;">
+        <div class="section-title">Nearby Results</div>
+        <span style="font-size:12px;color:var(--gray-400);">28 places found</span>
+      </div>
+
+      <div class="result-card" onclick="showBizModal()">
+        <div class="result-icon" style="background:#fce4ec;">🍲</div>
+        <div class="result-info">
+          <div class="result-name">Amala Shitta, Surulere</div>
+          <div class="result-meta">Local Cuisine · Behind Eko FM, Surulere</div>
+          <div class="result-footer">
+            <div class="result-rating">⭐ 4.9</div>
+            <div class="result-dist">0.8km · Open Now</div>
+            <div class="result-trust">🏅 Trusted</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card" onclick="showBizModal()">
+        <div class="result-icon" style="background:#e3f2fd;">🏦</div>
+        <div class="result-info">
+          <div class="result-name">Access Bank — Lekki Phase 1</div>
+          <div class="result-meta">Banking · Near Chevron Roundabout</div>
+          <div class="result-footer">
+            <div class="result-rating">⭐ 4.2</div>
+            <div class="result-dist">1.4km · Open</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card" onclick="showBizModal()">
+        <div class="result-icon" style="background:#f3e5f5;">🏨</div>
+        <div class="result-info">
+          <div class="result-name">Eko Hotels & Suites</div>
+          <div class="result-meta">Luxury Hotel · Victoria Island</div>
+          <div class="result-footer">
+            <div class="result-rating">⭐ 4.6</div>
+            <div class="result-dist">2.0km</div>
+            <div class="result-trust">🏅 Trusted</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card" onclick="showBizModal()">
+        <div class="result-icon" style="background:#fff8e1;">📚</div>
+        <div class="result-info">
+          <div class="result-name">Roving Heights Bookshop</div>
+          <div class="result-meta">Bookstore · Lekki · Books In Stock</div>
+          <div class="result-footer">
+            <div class="result-rating">⭐ 4.8</div>
+            <div class="result-dist">4.5km · Open</div>
+            <div class="result-trust">🏅 Trusted</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card" onclick="showBizModal()">
+        <div class="result-icon" style="background:#e8f5e9;">💼</div>
+        <div class="result-info">
+          <div class="result-name">Flutterwave — Lekki Office</div>
+          <div class="result-meta">FinTech · Employer · 156 reviews</div>
+          <div class="result-footer">
+            <div class="result-rating">⭐ 4.4 Vibe: 🟢</div>
+            <div class="result-dist">3.2km</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-card" onclick="showBizModal()">
+        <div class="result-icon" style="background:#fce4ec;">🏛️</div>
+        <div class="result-info">
+          <div class="result-name">FAAN — Murtala Muhammed Airport</div>
+          <div class="result-meta">Airport Authority · Ikeja</div>
+          <div class="result-footer">
+            <div class="result-rating">⭐ 2.8</div>
+            <div class="result-dist">18km</div>
+            <span style="background:#fce4ec;color:var(--red);font-size:9px;font-weight:700;padding:2px 5px;border-radius:4px;">⚠️ Low Score</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 3: BOOK NOOK ===== -->
+  <div class="screen" id="screen-nook">
+    <div class="nook-header">
+      <div class="logo" style="margin-bottom:12px;">📚 The <span>Book Nook</span></div>
+      <div class="nook-title">Nigeria's <span>Reading</span> Community</div>
+      <div class="nook-sub">Scan. Review. Connect with readers across Nigeria.</div>
+      <div class="trending-strip">
+        <div class="trending-dot"></div>
+        <div class="trending-text">Trending in Lagos: <strong>"Stay With Me" by Ayobami Adebayo</strong> — 142 reviews this week</div>
+      </div>
+    </div>
+
+    <div class="isbn-scanner" onclick="showToast('📷 Camera opened — point at book barcode to scan ISBN')">
+      <div class="scanner-icon">📷</div>
+      <div class="scanner-text">
+        <strong>Scan ISBN Barcode</strong>
+        <span>Point camera at any book to see Naija community reviews instantly</span>
+      </div>
+      <span style="color:white;font-size:20px;margin-left:auto;">→</span>
+    </div>
+
+    <div class="shelf-tabs" style="margin-bottom:16px;">
+      <div class="shelf-tab active" onclick="setShelfTab(this)">📖 Reading Now</div>
+      <div class="shelf-tab" onclick="setShelfTab(this)">✅ Finished</div>
+      <div class="shelf-tab" onclick="setShelfTab(this)">🤝 Borrow Me</div>
+    </div>
+
+    <div class="book-card" onclick="showBookModal()">
+      <div class="book-cover" style="background:linear-gradient(135deg,#6a1b9a,#9c27b0);">📖</div>
+      <div class="book-info">
+        <div class="naija-tag">🇳🇬 Nigerian Author</div>
+        <div class="book-title">Stay With Me</div>
+        <div class="book-author">Ayobami Adebayo</div>
+        <div class="stars" style="font-size:12px;">⭐⭐⭐⭐⭐</div>
+        <div class="book-stats">
+          <div class="book-rating">4.8/5</div>
+          <div class="book-reviews">· 312 reviews</div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:var(--green-light);font-weight:600;">📍 In Stock: Roving Heights, Jazzhole</div>
+      </div>
+      <button class="buy-btn" onclick="event.stopPropagation();showToast('🛒 Opening Roving Heights...')">Buy ₦7,500</button>
+    </div>
+
+    <div class="book-card" onclick="showBookModal()">
+      <div class="book-cover" style="background:linear-gradient(135deg,#e65100,#ff6d00);">📗</div>
+      <div class="book-info">
+        <div class="naija-tag">🌍 African Lit</div>
+        <div class="book-title">Purple Hibiscus</div>
+        <div class="book-author">Chimamanda Ngozi Adichie</div>
+        <div class="stars" style="font-size:12px;">⭐⭐⭐⭐⭐</div>
+        <div class="book-stats">
+          <div class="book-rating">4.9/5</div>
+          <div class="book-reviews">· 589 reviews</div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:var(--green-light);font-weight:600;">📍 In Stock: Terra Kulture, Roving Heights</div>
+      </div>
+      <button class="buy-btn" onclick="event.stopPropagation();showToast('🛒 Opening Terra Kulture...')">Buy ₦6,200</button>
+    </div>
+
+    <div class="book-card" onclick="showBookModal()">
+      <div class="book-cover" style="background:linear-gradient(135deg,#1b5e20,#2e7d32);">📕</div>
+      <div class="book-info">
+        <div class="naija-tag">🇳🇬 Nigerian Author</div>
+        <div class="book-title">Secret Lives of Baba Segi's Wives</div>
+        <div class="book-author">Lola Shoneyin</div>
+        <div class="stars" style="font-size:12px;">⭐⭐⭐⭐⭐</div>
+        <div class="book-stats">
+          <div class="book-rating">4.7/5</div>
+          <div class="book-reviews">· 201 reviews</div>
+        </div>
+        <div style="margin-top:6px;font-size:11px;color:var(--green-light);font-weight:600;">📍 In Stock: Jazzhole (₦8,900)</div>
+      </div>
+      <button class="buy-btn" onclick="event.stopPropagation();showToast('🛒 Opening Jazzhole listing...')">Buy ₦8,900</button>
+    </div>
+
+    <!-- AUTHOR SPOTLIGHT -->
+    <div class="author-spotlight">
+      <div class="spotlight-header">
+        <div class="spotlight-icon">✨</div>
+        <div class="spotlight-title">Local Author Spotlight — Follow & Get Notified</div>
+      </div>
+      <div class="author-list">
+        <div class="author-item">
+          <div class="author-avatar" style="background:#e8f5e9;">👩🏾</div>
+          <div class="author-name">Ayobami Adebayo</div>
+          <button class="follow-btn" onclick="showToast('🔔 Following Ayobami Adebayo!')">+ Follow</button>
+        </div>
+        <div class="author-item">
+          <div class="author-avatar" style="background:#e3f2fd;">👨🏿</div>
+          <div class="author-name">Teju Cole</div>
+          <button class="follow-btn" onclick="showToast('🔔 Following Teju Cole!')">+ Follow</button>
+        </div>
+        <div class="author-item">
+          <div class="author-avatar" style="background:#fce4ec;">👩🏾</div>
+          <div class="author-name">Sefi Atta</div>
+          <button class="follow-btn" onclick="showToast('🔔 Following Sefi Atta!')">+ Follow</button>
+        </div>
+        <div class="author-item">
+          <div class="author-avatar" style="background:#fff3e0;">👨🏿</div>
+          <div class="author-name">Chris Abani</div>
+          <button class="follow-btn" onclick="showToast('🔔 Following Chris Abani!')">+ Follow</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOK CLUBS -->
+    <div class="section" style="padding-bottom:20px;">
+      <div class="section-header">
+        <div class="section-title">Book Clubs Near You 📍</div>
+      </div>
+      <div class="result-card" onclick="showToast('📚 Joining Lagos Book Club...')">
+        <div class="result-icon" style="background:#fff8e1;">🏛️</div>
+        <div class="result-info">
+          <div class="result-name">Lagos Book Club</div>
+          <div class="result-meta">Meets every 2nd Saturday · Lekki Phase 1</div>
+          <div class="result-footer">
+            <div class="result-rating">⭐ 4.7</div>
+            <div class="result-dist">142 members</div>
+            <div class="result-trust">Open to All</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 4: WRITE ===== -->
+  <div class="screen" id="screen-write">
+    <div id="write-step-1">
+      <div class="write-header">
+        <div class="write-title">Write a Review</div>
+        <div class="write-sub">Share the real gist. Help your community make better choices.</div>
+      </div>
+      <div class="review-type-select">
+        <div class="type-card" onclick="showReviewForm('business')">
+          <div class="type-icon-wrap" style="background:#e8f5e9;">🏪</div>
+          <div class="type-info">
+            <strong>Business / Service</strong>
+            <span>Rate quality, speed, price. Add POS & power status.</span>
+          </div>
+          <div class="type-arrow">›</div>
+        </div>
+        <div class="type-card" onclick="showReviewForm('workplace')">
+          <div class="type-icon-wrap" style="background:#e3f2fd;">💼</div>
+          <div class="type-info">
+            <strong>Workplace / Career</strong>
+            <span>Rate work culture, salary transparency, management.</span>
+          </div>
+          <div class="type-arrow">›</div>
+        </div>
+        <div class="type-card" onclick="showReviewForm('book')">
+          <div class="type-icon-wrap" style="background:#fff8e1;">📚</div>
+          <div class="type-info">
+            <strong>A Book</strong>
+            <span>Scan ISBN or search by title. Rate Naija relatability.</span>
+          </div>
+          <div class="type-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BUSINESS FORM -->
+    <div class="review-form" id="form-business">
+      <button class="back-btn" onclick="hideReviewForms()">← Back</button>
+      <div style="padding:20px;">
+        <div class="write-title">Review a Business</div>
+      </div>
+
+      <div style="padding:0 20px;">
+        <div class="form-section">
+          <label class="form-label">🔍 Organization Name</label>
+          <div class="org-search">
+            <span>🔍</span>
+            <input type="text" placeholder="Search 736+ Nigerian organizations...">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">📍 Landmark</label>
+          <input class="form-input" type="text" placeholder="e.g., Behind the Zenith Bank on Allen Avenue">
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">⭐ Customer Service</label>
+          <div class="form-sub">How would you rate the way you were treated?</div>
+          <div class="star-rating-row" id="stars-service">
+            <span class="star" onclick="rateStar('service',1)">⭐</span>
+            <span class="star" onclick="rateStar('service',2)">⭐</span>
+            <span class="star" onclick="rateStar('service',3)">⭐</span>
+            <span class="star" onclick="rateStar('service',4)">⭐</span>
+            <span class="star" onclick="rateStar('service',5)">⭐</span>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">🤝 Professionalism</label>
+          <div class="form-sub">Did the staff handle the transaction with expertise?</div>
+          <div class="star-rating-row" id="stars-prof">
+            <span class="star" onclick="rateStar('prof',1)">⭐</span>
+            <span class="star" onclick="rateStar('prof',2)">⭐</span>
+            <span class="star" onclick="rateStar('prof',3)">⭐</span>
+            <span class="star" onclick="rateStar('prof',4)">⭐</span>
+            <span class="star" onclick="rateStar('prof',5)">⭐</span>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="nps-container">
+            <div class="nps-question">On a scale of 0–10, how likely are you to recommend this place?</div>
+            <div class="nps-scale" id="nps-scale">
+              <div class="nps-num" onclick="selectNPS(this,0)">0</div>
+              <div class="nps-num" onclick="selectNPS(this,1)">1</div>
+              <div class="nps-num" onclick="selectNPS(this,2)">2</div>
+              <div class="nps-num" onclick="selectNPS(this,3)">3</div>
+              <div class="nps-num" onclick="selectNPS(this,4)">4</div>
+              <div class="nps-num" onclick="selectNPS(this,5)">5</div>
+              <div class="nps-num" onclick="selectNPS(this,6)">6</div>
+              <div class="nps-num" onclick="selectNPS(this,7)">7</div>
+              <div class="nps-num" onclick="selectNPS(this,8)">8</div>
+              <div class="nps-num" onclick="selectNPS(this,9)">9</div>
+              <div class="nps-num" onclick="selectNPS(this,10)">10</div>
+            </div>
+            <div class="nps-labels"><span>Never</span><span>Definitely!</span></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">📦 What did you buy / do?</label>
+          <input class="form-input" type="text" placeholder="e.g., Account Opening, Jollof Rice & Chicken, Passport Renewal">
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">⚡ Power & POS Status</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div class="pos-tag pos-yes" style="cursor:pointer;padding:6px 12px;font-size:12px;" onclick="togglePOS(this)">✅ POS Available</div>
+            <div class="pos-tag" style="cursor:pointer;padding:6px 12px;font-size:12px;background:var(--gray-100);color:var(--gray-600);" onclick="togglePOS(this)">⚡ 24/7 Power</div>
+            <div class="pos-tag" style="cursor:pointer;padding:6px 12px;font-size:12px;background:var(--gray-100);color:var(--gray-600);" onclick="togglePOS(this)">🚗 Secure Parking</div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">💬 The Real Gist (Optional)</label>
+          <textarea class="form-textarea" placeholder="Tell the truth. Be specific about what happened and when."></textarea>
+          <button class="voice-btn" onclick="showToast('🎙️ Voice recording started...')">🎙️ Record Voice Note Instead</button>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">📎 Add Proof (Builds Trust)</label>
+          <div class="proof-upload" onclick="showToast('📁 File picker opened')">
+            <div class="upload-icon">📸</div>
+            <div class="upload-text">Upload Receipt, Photo, or Video</div>
+            <div class="upload-sub">Earns "Verified Purchase" badge · +25 Street Cred points</div>
+          </div>
+        </div>
+
+        <div class="anon-toggle">
+          <div class="anon-mask">🎭</div>
+          <div class="anon-text">
+            <strong>Post Anonymously</strong>
+            <span>Your username: "Ikeja Reviewer" — real identity protected</span>
+          </div>
+          <div class="toggle"></div>
+        </div>
+
+        <button class="submit-btn" style="margin-top:20px;" onclick="submitReview()">Post Review — Earn 25 Street Cred ⚡</button>
+      </div>
+    </div>
+
+    <!-- WORKPLACE FORM -->
+    <div class="review-form" id="form-workplace">
+      <button class="back-btn" onclick="hideReviewForms()">← Back</button>
+      <div style="padding:20px;">
+        <div class="write-title">Review Your Workplace</div>
+        <div class="write-sub">Your identity is fully protected. Speak the truth.</div>
+      </div>
+      <div style="padding:0 20px;">
+        <div class="form-section">
+          <label class="form-label">🏢 Company Name</label>
+          <div class="org-search">
+            <span>🔍</span>
+            <input type="text" placeholder="Search companies, banks, fintechs, govt agencies...">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <label class="form-label">🌟 Work Culture</label>
+          <div class="star-rating-row" id="stars-culture">
+            <span class="star" onclick="rateStar('culture',1)">⭐</span>
+            <span class="star" onclick="rateStar('culture',2)">⭐</span>
+            <span class="star" onclick="rateStar('culture',3)">⭐</span>
+            <span class="star" onclick="rateStar('culture',4)">⭐</span>
+            <span class="star" onclick="rateStar('culture',5)">⭐</span>
+          </div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">💰 Salary Transparency & Punctuality</label>
+          <div class="star-rating-row" id="stars-salary">
+            <span class="star" onclick="rateStar('salary',1)">⭐</span>
+            <span class="star" onclick="rateStar('salary',2)">⭐</span>
+            <span class="star" onclick="rateStar('salary',3)">⭐</span>
+            <span class="star" onclick="rateStar('salary',4)">⭐</span>
+            <span class="star" onclick="rateStar('salary',5)">⭐</span>
+          </div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">👔 Management Quality</label>
+          <div class="star-rating-row" id="stars-mgmt">
+            <span class="star" onclick="rateStar('mgmt',1)">⭐</span>
+            <span class="star" onclick="rateStar('mgmt',2)">⭐</span>
+            <span class="star" onclick="rateStar('mgmt',3)">⭐</span>
+            <span class="star" onclick="rateStar('mgmt',4)">⭐</span>
+            <span class="star" onclick="rateStar('mgmt',5)">⭐</span>
+          </div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">💸 Salary Range (Anonymous)</label>
+          <input class="form-input" type="text" placeholder="e.g., ₦250,000 – ₦350,000/month">
+        </div>
+        <div class="form-section">
+          <label class="form-label">💬 Company Townhall (Your experience)</label>
+          <textarea class="form-textarea" placeholder="Share the truth about culture, management, salary delays..."></textarea>
+        </div>
+        <div style="background:var(--gray-100);border-radius:10px;padding:14px;margin-bottom:16px;">
+          <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;font-size:13px;color:var(--dark);">
+            <input type="checkbox" style="margin-top:2px;"> I confirm I am/was an employee of this organization
+          </label>
+        </div>
+        <div class="anon-toggle">
+          <div class="anon-mask">🎭</div>
+          <div class="anon-text">
+            <strong>Anonymous Mode: ON</strong>
+            <span>Username: "Lagos Banker" — AES-256 encrypted</span>
+          </div>
+          <div class="toggle"></div>
+        </div>
+        <button class="submit-btn" style="margin-top:20px;" onclick="submitReview()">Post Workplace Review — Earn 10 Cred ⚡</button>
+      </div>
+    </div>
+
+    <!-- BOOK FORM -->
+    <div class="review-form" id="form-book">
+      <button class="back-btn" onclick="hideReviewForms()">← Back</button>
+      <div style="padding:20px;">
+        <div class="write-title">Review a Book</div>
+      </div>
+      <div style="padding:0 20px;">
+        <div class="form-section">
+          <label class="form-label">📷 Scan ISBN or Search Title</label>
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <button style="flex:1;padding:12px;background:var(--green-deep);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;" onclick="showToast('📷 Camera opened for ISBN scan')">📷 Scan ISBN</button>
+            <button style="flex:1;padding:12px;background:var(--gray-100);color:var(--dark);border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;" onclick="showToast('🔍 Book search opened')">🔍 Search Title</button>
+          </div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">⭐ Overall Rating</label>
+          <div class="star-rating-row" id="stars-book">
+            <span class="star" onclick="rateStar('book',1)">⭐</span>
+            <span class="star" onclick="rateStar('book',2)">⭐</span>
+            <span class="star" onclick="rateStar('book',3)">⭐</span>
+            <span class="star" onclick="rateStar('book',4)">⭐</span>
+            <span class="star" onclick="rateStar('book',5)">⭐</span>
+          </div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">🇳🇬 Naija Relatability Score</label>
+          <div class="form-sub">How well does it capture the Nigerian/African experience?</div>
+          <div class="nps-scale" style="display:flex;gap:3px;">
+            <div class="nps-num" onclick="selectNPS(this,1)" style="flex:1;">1</div>
+            <div class="nps-num" onclick="selectNPS(this,2)" style="flex:1;">2</div>
+            <div class="nps-num" onclick="selectNPS(this,3)" style="flex:1;">3</div>
+            <div class="nps-num" onclick="selectNPS(this,4)" style="flex:1;">4</div>
+            <div class="nps-num" onclick="selectNPS(this,5)" style="flex:1;">5</div>
+          </div>
+          <div class="nps-labels"><span>Not Relatable</span><span>Deeply Nigerian</span></div>
+        </div>
+        <div class="form-section">
+          <label class="form-label">💬 Quote of the Book</label>
+          <input class="form-input" type="text" placeholder="Share your favorite line...">
+        </div>
+        <div class="form-section">
+          <label class="form-label">📝 Your Full Review</label>
+          <textarea class="form-textarea" placeholder="Tell the Naija reading community what you think..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="submitReview()">Post Book Review — Earn 10 Cred ⚡</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN 5: PROFILE ===== -->
+  <div class="screen" id="screen-profile">
+    <div class="profile-header">
+      <div class="profile-top">
+        <div class="profile-avatar">AM</div>
+        <div>
+          <div class="profile-name">Amaka Obi</div>
+          <div class="profile-handle">@amaka_enugu · Lagos, Nigeria</div>
+          <div class="profile-level">🏆 Area Mother · Lvl 3</div>
+        </div>
+      </div>
+      <div class="profile-stats">
+        <div class="stat-item"><span class="stat-val">67</span><div class="stat-label">Reviews</div></div>
+        <div class="stat-item"><span class="stat-val">4</span><div class="stat-label">Resolved</div></div>
+        <div class="stat-item"><span class="stat-val">1,240</span><div class="stat-label">Street Cred</div></div>
+        <div class="stat-item"><span class="stat-val">89</span><div class="stat-label">Helpful</div></div>
+      </div>
+    </div>
+
+    <!-- STREET CRED -->
+    <div class="street-cred">
+      <div class="cred-header">
+        <div class="cred-title">⚡ Street Cred Score</div>
+        <div class="cred-points">1,240 pts</div>
+      </div>
+      <div class="cred-bar-wrap"><div class="cred-bar"></div></div>
+      <div class="cred-sub">760 pts to Area Father → 🏆 Legend status. Keep reviewing!</div>
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+        <div style="font-size:11px;background:var(--gray-100);padding:5px 10px;border-radius:6px;color:var(--gray-600);">📝 Text Review = 10 pts</div>
+        <div style="font-size:11px;background:var(--gray-100);padding:5px 10px;border-radius:6px;color:var(--gray-600);">📸 Photo Review = 25 pts</div>
+        <div style="font-size:11px;background:var(--gray-100);padding:5px 10px;border-radius:6px;color:var(--gray-600);">🏛️ Gov't Review = 50 pts</div>
+        <div style="font-size:11px;background:var(--gray-100);padding:5px 10px;border-radius:6px;color:var(--gray-600);">✅ Resolved Case = 100 pts</div>
+      </div>
+    </div>
+
+    <!-- BADGES -->
+    <div class="badges-section">
+      <div class="badges-title">My Badges</div>
+      <div class="badge-grid">
+        <div class="badge-item badge-earned">
+          <div class="badge-icon" style="background:#e8f5e9;">✅</div>
+          <div class="badge-name">Verified Reviewer</div>
+        </div>
+        <div class="badge-item badge-earned">
+          <div class="badge-icon" style="background:#fff8e1;">🍲</div>
+          <div class="badge-name">Food Critic</div>
+        </div>
+        <div class="badge-item badge-earned">
+          <div class="badge-icon" style="background:#e3f2fd;">🏛️</div>
+          <div class="badge-name">Gov't Watchdog</div>
+        </div>
+        <div class="badge-item badge-earned">
+          <div class="badge-icon" style="background:#f3e5f5;">📚</div>
+          <div class="badge-name">Book Nook</div>
+        </div>
+        <div class="badge-item badge-locked">
+          <div class="badge-icon" style="background:#e8f5e9;">💰</div>
+          <div class="badge-name">Salary Spy</div>
+        </div>
+        <div class="badge-item badge-locked">
+          <div class="badge-icon" style="background:#fce4ec;">🎙️</div>
+          <div class="badge-name">Voice Critic</div>
+        </div>
+        <div class="badge-item badge-locked">
+          <div class="badge-icon" style="background:#fff3e0;">✈️</div>
+          <div class="badge-name">Diaspora Guide</div>
+        </div>
+        <div class="badge-item badge-locked">
+          <div class="badge-icon" style="background:#e8eaf6;">🏆</div>
+          <div class="badge-name">Legend</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div style="padding:0 20px;margin-bottom:8px;">
+      <div class="section-title" style="font-size:16px;">Recent Activity</div>
+    </div>
+    <div class="activity-feed">
+      <div class="activity-item">
+        <div class="activity-dot" style="background:#e8f5e9;">⭐</div>
+        <div>
+          <div class="activity-text">You reviewed <span>Amala Shitta, Surulere</span> — 5 stars</div>
+          <div class="activity-time">2 hours ago · +25 Street Cred</div>
+        </div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-dot" style="background:#e3f2fd;">📚</div>
+        <div>
+          <div class="activity-text">You reviewed <span>Stay With Me</span> by Ayobami Adebayo</div>
+          <div class="activity-time">Yesterday · +10 Street Cred</div>
+        </div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-dot" style="background:#fce4ec;">✅</div>
+        <div>
+          <div class="activity-text"><span>Eko Hotels & Suites</span> marked your complaint as Resolved</div>
+          <div class="activity-time">3 days ago · +100 Street Cred</div>
+        </div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-dot" style="background:#fff8e1;">🏛️</div>
+        <div>
+          <div class="activity-text">Your review of <span>Nigeria Immigration Service</span> triggered a Public Service Report</div>
+          <div class="activity-time">1 week ago · +50 Street Cred</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SETTINGS -->
+    <div class="settings-list">
+      <div class="settings-item" onclick="showToast('⚙️ Opening account settings...')">
+        <div class="settings-icon">⚙️</div>
+        <div class="settings-label">Account Settings</div>
+        <div class="settings-arrow">›</div>
+      </div>
+      <div class="settings-item" onclick="showToast('🔒 Privacy settings...')">
+        <div class="settings-icon">🔒</div>
+        <div class="settings-label">Privacy & Anonymity</div>
+        <div class="settings-arrow">›</div>
+      </div>
+      <div class="settings-item" onclick="showToast('🏢 Opening Business Dashboard...')">
+        <div class="settings-icon">🏢</div>
+        <div class="settings-label">Business Dashboard</div>
+        <div class="settings-arrow">›</div>
+      </div>
+      <div class="settings-item" onclick="showToast('📊 Data Insights — Premium Feature')">
+        <div class="settings-icon">📊</div>
+        <div class="settings-label">My Analytics</div>
+        <div class="settings-arrow">›</div>
+      </div>
+      <div class="settings-item" onclick="showToast('📜 Terms of Service opened')">
+        <div class="settings-icon">📜</div>
+        <div class="settings-label">Terms of Service</div>
+        <div class="settings-arrow">›</div>
+      </div>
+      <div class="settings-item" onclick="showToast('ℹ️ About NaijaVerify.ng')">
+        <div class="settings-icon">ℹ️</div>
+        <div class="settings-label">About NaijaVerify.ng</div>
+        <div class="settings-arrow">›</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <div class="nav-item active" id="nav-home" onclick="switchScreen('home')">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Home</div>
+    </div>
+    <div class="nav-item" id="nav-explore" onclick="switchScreen('explore')">
+      <div class="nav-icon">🗺️</div>
+      <div class="nav-label">Explore</div>
+    </div>
+    <div class="nav-write" onclick="switchScreen('write')">+</div>
+    <div class="nav-item" id="nav-nook" onclick="switchScreen('nook')">
+      <div class="nav-icon">📚</div>
+      <div class="nav-label">The Nook</div>
+    </div>
+    <div class="nav-item" id="nav-profile" onclick="switchScreen('profile')">
+      <div class="nav-icon">👤</div>
+      <div class="nav-label">Profile</div>
+    </div>
+  </nav>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<script>
+// NAVIGATION
+function switchScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+  document.getElementById('screen-' + name).classList.add('active');
+  const navEl = document.getElementById('nav-' + name);
+  if (navEl) navEl.classList.add('active');
+
+  if (name === 'write') {
+    hideReviewForms();
+    document.getElementById('write-step-1').style.display = 'block';
+  }
+
+  window.scrollTo(0, 0);
+}
+
+// TOAST
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// REVIEW FORMS
+function showReviewForm(type) {
+  document.getElementById('write-step-1').style.display = 'none';
+  document.querySelectorAll('.review-form').forEach(f => f.classList.remove('active'));
+  document.getElementById('form-' + type).classList.add('active');
+}
+function hideReviewForms() {
+  document.querySelectorAll('.review-form').forEach(f => f.classList.remove('active'));
+  document.getElementById('write-step-1').style.display = 'block';
+}
+
+// STAR RATING
+function rateStar(id, val) {
+  const stars = document.querySelectorAll('#stars-' + id + ' .star');
+  stars.forEach((s, i) => {
+    s.classList.toggle('lit', i < val);
+  });
+}
+
+// NPS
+function selectNPS(el, val) {
+  const parent = el.parentElement;
+  parent.querySelectorAll('.nps-num').forEach(n => n.classList.remove('selected'));
+  el.classList.add('selected');
+  if (val >= 9) showToast('🎉 Promoter! You love this place.');
+  else if (val >= 7) showToast('😐 Passive — decent but room to improve.');
+  else showToast('😠 Detractor — noted. Your feedback matters.');
+}
+
+// POS TOGGLE
+function togglePOS(el) {
+  el.classList.toggle('pos-yes');
+  el.textContent = el.classList.contains('pos-yes') ? '✅ ' + el.textContent.replace(/^[^\s]+\s/, '') : el.textContent.replace('✅ ', '');
+}
+
+// FILTER CHIPS
+function toggleChip(el) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  showToast('🔍 Filtering by: ' + el.textContent.trim());
+}
+
+// SHELF TABS
+function setShelfTab(el) {
+  document.querySelectorAll('.shelf-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// SUBMIT REVIEW
+function submitReview() {
+  const msgs = [
+    '🎉 Review posted! You earned 25 Street Cred ⚡',
+    '✅ Your review is live! The community thanks you.',
+    '🇳🇬 Real gist delivered! +25 Street Cred added.'
+  ];
+  showToast(msgs[Math.floor(Math.random() * msgs.length)]);
+  setTimeout(() => switchScreen('home'), 1500);
+}
+
+// MODALS
+function showBizModal() {
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">Amala Shitta, Surulere</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <span style="background:#e8f5e9;color:var(--green-deep);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;">🍲 Local Cuisine</span>
+      <span style="background:var(--gold-pale);color:var(--green-deep);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;">🏅 Trusted Badge</span>
+      <span class="nps-badge">NPS: 9.1/10</span>
+    </div>
+    <div class="vibe-meter"><div class="vibe-label">Food Quality</div><div class="vibe-bar-wrap"><div class="vibe-bar vibe-green" style="width:92%"></div></div><div class="vibe-pct">92%</div></div>
+    <div class="vibe-meter"><div class="vibe-label">Service Speed</div><div class="vibe-bar-wrap"><div class="vibe-bar vibe-green" style="width:85%"></div></div><div class="vibe-pct">85%</div></div>
+    <div class="vibe-meter"><div class="vibe-label">Value for Money</div><div class="vibe-bar-wrap"><div class="vibe-bar vibe-green" style="width:97%"></div></div><div class="vibe-pct">97%</div></div>
+    <div class="pos-tags" style="margin:12px 0;">
+      <div class="pos-tag pos-yes">✅ POS Available</div>
+      <div class="pos-tag pos-yes">✅ 24/7 Power</div>
+      <div class="pos-tag pos-yes">✅ Secure Parking</div>
+    </div>
+    <button onclick="closeModal();switchScreen('write');" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--green-light),var(--green-deep));color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;">✍️ Write a Review</button>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function showWorkplaceModal() {
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">GTBank (GTCO)</div>
+    <div style="margin-bottom:14px;">
+      <div class="wc-vibe vibe-healthy" style="display:inline-flex;">🟢 Healthy Work Environment</div>
+    </div>
+    <div class="vibe-meter"><div class="vibe-label">Work Culture</div><div class="vibe-bar-wrap"><div class="vibe-bar vibe-green" style="width:78%"></div></div><div class="vibe-pct">78%</div></div>
+    <div class="vibe-meter"><div class="vibe-label">Leadership</div><div class="vibe-bar-wrap"><div class="vibe-bar vibe-orange" style="width:61%"></div></div><div class="vibe-pct">61%</div></div>
+    <div class="vibe-meter"><div class="vibe-label">Work-Life Balance</div><div class="vibe-bar-wrap"><div class="vibe-bar vibe-green" style="width:70%"></div></div><div class="vibe-pct">70%</div></div>
+    <div class="salary-score" style="margin:12px 0;">
+      <div class="salary-label">💰 Salary Punctuality</div>
+      <div class="salary-val">94% paid by 26th</div>
+    </div>
+    <div style="background:var(--gray-100);border-radius:10px;padding:12px;font-size:12px;color:var(--gray-600);margin-bottom:14px;">
+      💬 <em>"Great bank to work at as a fresh grad. The training is solid, but middle management can be difficult. Salary never misses though!"</em> — <strong>Lagos Banker (Anonymous)</strong>
+    </div>
+    <button onclick="closeModal();switchScreen('write');" style="width:100%;padding:14px;background:linear-gradient(135deg,var(--green-light),var(--green-deep));color:white;border:none;border-radius:12px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">💼 Review This Workplace</button>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function showBookModal() {
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">Stay With Me</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:12px;">Ayobami Adebayo · Fiction · 2017</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <span style="background:var(--gold-pale);color:var(--green-deep);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;">🇳🇬 Nigerian Author</span>
+      <span style="background:#e8f5e9;color:var(--green-deep);font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;">⭐ 4.8/5 (312 reviews)</span>
+    </div>
+    <div class="vibe-meter"><div class="vibe-label">🇳🇬 Naija Relatability</div><div class="vibe-bar-wrap"><div class="vibe-bar vibe-green" style="width:96%"></div></div><div class="vibe-pct">96%</div></div>
+    <div style="background:var(--gray-100);border-radius:10px;padding:12px;margin:12px 0;font-size:12px;font-style:italic;color:var(--gray-600);">
+      💬 "This book made me cry on the BRT. The Yoruba family dynamics are painfully accurate. Every Nigerian woman should read this."
+    </div>
+    <div style="font-size:12px;color:var(--green-light);font-weight:600;margin-bottom:14px;">📍 In Stock at Roving Heights (₦7,500) · Jazzhole (₦7,800) · Amazon</div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="showToast('🛒 Opening Roving Heights...');closeModal();" style="flex:1;padding:12px;background:var(--green-deep);color:white;border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Buy Now</button>
+      <button onclick="showToast('💬 Joining book discussion...');closeModal();" style="flex:1;padding:12px;background:var(--gray-100);color:var(--dark);border:none;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Join Circle 💬</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function showArrivalModal() {
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-title">✈️ Arrivals Hub</div>
+    <div style="font-size:13px;color:var(--gray-400);margin-bottom:16px;">Your trusted guide for coming to Nigeria</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="background:var(--gray-100);border-radius:10px;padding:12px;cursor:pointer;" onclick="showToast('🏦 Loading Top 5 Diaspora Banks...')">
+        <div style="font-size:13px;font-weight:700;color:var(--dark);">🏦 Top 5 Banks for Diaspora Accounts</div>
+        <div style="font-size:11px;color:var(--gray-400);margin-top:2px;">Domiciliary accounts · Easy KYC · Low fees</div>
+      </div>
+      <div style="background:var(--gray-100);border-radius:10px;padding:12px;cursor:pointer;" onclick="showToast('🏠 Loading Verified Short-lets...')">
+        <div style="font-size:13px;font-weight:700;color:var(--dark);">🏠 Verified Short-lets in Lagos 2026</div>
+        <div style="font-size:11px;color:var(--gray-400);margin-top:2px;">Actual photos · Security ratings · Power scores</div>
+      </div>
+      <div style="background:var(--gray-100);border-radius:10px;padding:12px;cursor:pointer;" onclick="showToast('🚗 Loading Safe Transport...')">
+        <div style="font-size:13px;font-weight:700;color:var(--dark);">🚗 Safe Airport Transfers</div>
+        <div style="font-size:11px;color:var(--gray-400);margin-top:2px;">Uber, Bolt, InDrive — verified & rated</div>
+      </div>
+      <div style="background:var(--gray-100);border-radius:10px;padding:12px;cursor:pointer;" onclick="showToast('💼 Loading Safest Work Environments...')">
+        <div style="font-size:13px;font-weight:700;color:var(--dark);">💼 Safest Places to Work in Lagos 2026</div>
+        <div style="font-size:11px;color:var(--gray-400);margin-top:2px;">For returnees seeking Nigerian roles</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+// Init
+switchScreen('home');
+</script>
+</body>
+</html>
