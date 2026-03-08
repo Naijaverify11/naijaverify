@@ -384,6 +384,7 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
     <button class="nav-link cta" onclick="showPage('review')">+ Post Review</button>
     <button class="nav-link cta" onclick="openRegModal()" id="reg-nav-btn" style="background:var(--gold);color:var(--green-deep);">&#128100; Register</button>
     <button class="logout-btn" id="logout-btn" onclick="doLogout()" style="display:none;">Log Out</button>
+    <button id="admin-panel-btn" onclick="openAdminPanel()" style="display:none;background:#c62828;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;margin-left:4px;">&#9881; Admin</button>
   </div>
   <button class="nav-hamburger" onclick="toggleMobileMenu()">&#9776;</button>
 </nav>
@@ -1024,6 +1025,26 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
     </div>
   </div>
 </footer>
+
+<!-- ADMIN PANEL MODAL -->
+<div class="modal-bg" id="admin-modal-bg" onclick="if(event.target===this)closeAdminPanel()" style="z-index:600;">
+  <div class="modal-box" style="max-width:700px;max-height:90vh;overflow-y:auto;">
+    <button class="modal-close" onclick="closeAdminPanel()">&#10005;</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #e8e8e4;">
+      <div style="font-size:28px;">&#9881;</div>
+      <div>
+        <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#c62828;">Admin Panel</div>
+        <div style="font-size:11px;color:#9a9a94;">NaijaVerify.ng — Manage Reviews &amp; Users</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+      <button onclick="adminShowTab('reviews')" id="atab-reviews" style="padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128172; All Reviews</button>
+      <button onclick="adminShowTab('users')" id="atab-users" style="padding:8px 16px;background:#f4f4f2;color:#0d1f17;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128100; Registered Users</button>
+      <button onclick="adminClearAll()" style="padding:8px 16px;background:#c62828;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128465; Clear All Reviews</button>
+    </div>
+    <div id="admin-tab-content"></div>
+  </div>
+</div>
 
 <!-- LEGAL CONTENT SOURCES (hidden) -->
 <div id="legal-src-terms" style="display:none;">
@@ -1759,7 +1780,7 @@ async function submitReview(type) {
       method: 'POST',
       headers: {'Content-Type':'application/json','Accept':'application/json'},
       body: JSON.stringify({
-        _subject: 'NaijaVerify Review: ' + rtype + ' - ' + org,
+        _subject: '⭐ NEW REVIEW on NaijaVerify: ' + org + ' [' + rtype + '] by ' + uname,
         review_type: rtype,
         organization_or_book: org,
         review_text: txt,
@@ -1767,8 +1788,12 @@ async function submitReview(type) {
         professionalism_rating: profStars + ' / 5',
         nps_score: nps + ' / 10',
         reviewer_username: uname,
+        reviewer_email: NV_USER ? NV_USER.email : 'Anonymous (not logged in)',
+        reviewer_name: NV_USER ? NV_USER.name : 'Anonymous',
+        is_registered_user: NV_USER ? 'YES' : 'NO - Anonymous user',
         type: 'REVIEW',
-        submitted_from: 'naijaverify.ng'
+        submitted_from: 'naijaverify.ng',
+        submitted_at: new Date().toLocaleString('en-NG')
       })
     });
   } catch(e) {}
@@ -1778,22 +1803,32 @@ async function submitReview(type) {
     NV_BOOK_REVIEWS[org].push({text:txt, uname:uname, stars:svcStars, nps:nps, date:new Date().toLocaleDateString('en-NG')});
   }
 
-  addReviewToFeed(org, rtype, txt, uname, svcStars, profStars, nps);
-  showToast('Review posted! Thank you for helping Nigeria! \u{1F389}');
+  var reviewId = 'rv_' + Date.now();
+  try {
+    var saved = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
+    saved.unshift({id:reviewId, org:org, rtype:rtype, txt:txt, uname:uname, svc:svcStars, prof:profStars, nps:nps, date:new Date().toISOString()});
+    if (saved.length > 50) saved = saved.slice(0,50);
+    localStorage.setItem('NV_REVIEWS', JSON.stringify(saved));
+  } catch(e) {}
+  addReviewToFeed(org, rtype, txt, uname, svcStars, profStars, nps, reviewId, false);
+  showToast('Review posted! Thank you for helping Nigeria! &#127881;');
   setTimeout(function(){ showPage('home'); }, 2200);
 }
 
 // ═══ REVIEW FEED ═══
-function addReviewToFeed(org, rtype, txt, uname, svc, prof, nps) {
+function addReviewToFeed(org, rtype, txt, uname, svc, prof, nps, reviewId, fromStorage) {
   var feed = document.getElementById('public-reviews-feed');
   if (!feed) return;
   var tagClass = rtype === 'Workplace' ? 'prc-tag-work' : rtype === 'Book' ? 'prc-tag-book' : 'prc-tag-biz';
-  var starsHtml = '\u2b50'.repeat(Math.max(1, parseInt(svc)||3));
+  var starsHtml = '⭐'.repeat(Math.max(1, parseInt(svc)||3));
   var now = new Date().toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
+  var isAdmin = NV_USER && NV_USER.email && NV_USER.email.toLowerCase() === 'naijaverify0@gmail.com';
+  var rid = reviewId || ('rv_' + Date.now());
   var card = document.createElement('div');
   card.className = 'pub-review-card';
+  card.id = rid;
   card.style.borderLeft = '4px solid #1e7a52';
-  card.style.animation = 'fadeInUp 0.4s ease';
+  if (!fromStorage) card.style.animation = 'fadeInUp 0.4s ease';
   card.innerHTML =
     '<div class="prc-header">' +
     '<div class="prc-avatar">' + (uname||'Anonymous') + '</div>' +
@@ -1804,13 +1839,30 @@ function addReviewToFeed(org, rtype, txt, uname, svc, prof, nps) {
     '<div style="text-align:right;font-size:11px;">' +
     '<div style="color:#f59e0b;font-size:14px;">' + starsHtml + '</div>' +
     (nps && nps !== 'Not selected' ? '<div style="color:#9a9a94;">NPS: <strong>' + nps + '/10</strong></div>' : '') +
+    (isAdmin ? '<button onclick="deleteReview(&quot;' + rid + '&quot;)" style="margin-top:6px;background:#c62828;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">&#128465; Delete</button>' : '') +
     '</div></div>' +
     '<div class="prc-body">' + (txt||'') + '</div>' +
     ((svc||prof) ? '<div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#5a5a54;">' +
     (svc ? '<span>Customer Service: ' + svc + '/5</span>' : '') +
     (prof ? '<span>Professionalism: ' + prof + '/5</span>' : '') +
     '</div>' : '');
-  feed.insertBefore(card, feed.firstChild);
+  if (fromStorage) {
+    feed.appendChild(card);
+  } else {
+    feed.insertBefore(card, feed.firstChild);
+  }
+}
+
+function deleteReview(rid) {
+  if (!confirm('Delete this review? This cannot be undone.')) return;
+  var card = document.getElementById(rid);
+  if (card) card.remove();
+  try {
+    var saved = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
+    saved = saved.filter(function(r){ return r.id !== rid; });
+    localStorage.setItem('NV_REVIEWS', JSON.stringify(saved));
+  } catch(e) {}
+  showToast('Review deleted.');
 }
 
 // ═══ BOOK NOOK ═══
@@ -2051,11 +2103,28 @@ async function doRegister() {
   try {
     await fetch('https://formspree.io/f/' + FPID, {
       method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body: JSON.stringify({_subject:'New Registration: '+name, full_name:name, email:email, phone:phone||'not provided', state:state, username:uname, type:'USER REGISTRATION', submitted_from:'naijaverify.ng'})
+      body: JSON.stringify({
+        _subject: '🆕 NEW USER REGISTERED: ' + name + ' | Username: ' + uname,
+        full_name: name,
+        email: email,
+        phone: phone || 'not provided',
+        state: state,
+        username: uname,
+        admin_note: '⚠️ Save this: Username = ' + uname + ' | Email = ' + email,
+        type: 'USER REGISTRATION',
+        submitted_from: 'naijaverify.ng',
+        registered_at: new Date().toLocaleString('en-NG')
+      })
     });
   } catch(e) {}
   NV_USER = {name:name, email:email, uname:uname};
-  var dm = document.getElementById('rm-done-msg');
+  // Save user to localStorage so login can find their username
+  try {
+    var users = JSON.parse(localStorage.getItem('NV_USERS') || '{}');
+    users[email.toLowerCase()] = {name:name, uname:uname, state:state, pass:btoa(pass)};
+    localStorage.setItem('NV_USERS', JSON.stringify(users));
+    localStorage.setItem('NV_SESSION', JSON.stringify(NV_USER));
+  } catch(e) {}
   var du = document.getElementById('rm-done-uname');
   if (dm) dm.textContent = 'Welcome, ' + name.split(' ')[0] + '! Check your email for confirmation.';
   if (du) du.textContent = uname;
@@ -2070,20 +2139,43 @@ function doLogin() {
   var pass = (document.getElementById('lg-pass')||{}).value||'';
   if (!email.includes('@')) { showToast('Please enter a valid email'); return; }
   if (!pass) { showToast('Please enter your password'); return; }
-  NV_USER = {name:email.split('@')[0], email:email, uname:email.split('@')[0]};
-  showToast('Welcome back! You are now logged in.');
+  try {
+    var users = JSON.parse(localStorage.getItem('NV_USERS') || '{}');
+    var found = users[email.toLowerCase()];
+    if (found) {
+      // Validate password
+      if (found.pass && found.pass !== btoa(pass)) {
+        showToast('Incorrect password. Please try again.'); return;
+      }
+      NV_USER = {name:found.name, email:email, uname:found.uname};
+    } else {
+      // Not registered on this device - use email prefix as fallback
+      NV_USER = {name:email.split('@')[0], email:email, uname:email.split('@')[0]};
+      showToast('Account not found on this device. Please register first.');
+      return;
+    }
+  } catch(e) {
+    NV_USER = {name:email.split('@')[0], email:email, uname:email.split('@')[0]};
+  }
+  try { localStorage.setItem('NV_SESSION', JSON.stringify(NV_USER)); } catch(e) {}
+  showToast('Welcome back, ' + NV_USER.name.split(' ')[0] + '! Logged in as ' + NV_USER.uname);
   closeRegModal();
   var btn = document.getElementById('reg-nav-btn');
-  if (btn) btn.textContent = 'Hi, ' + email.split('@')[0];
+  if (btn) btn.textContent = 'Hi, ' + NV_USER.name.split(' ')[0];
   var lb = document.getElementById('logout-btn');
   if (lb) lb.style.display = 'inline-block';
 }
 function doLogout() {
   NV_USER = null;
+  try { localStorage.removeItem('NV_SESSION'); } catch(e) {}
   var btn = document.getElementById('reg-nav-btn');
   if (btn) { btn.innerHTML = '&#128100; Register'; btn.style.background='var(--gold)'; btn.style.color='var(--green-deep)'; }
   var lb = document.getElementById('logout-btn');
   if (lb) lb.style.display = 'none';
+  // Remove admin delete buttons
+  document.querySelectorAll('.admin-del-btn').forEach(function(b){ b.remove(); });
+  var adminBtn = document.getElementById('admin-panel-btn');
+  if (adminBtn) adminBtn.style.display = 'none';
   showToast('You have been logged out.');
 }
 
@@ -2125,10 +2217,139 @@ function closeLegalModal() {
   if (bg) bg.classList.remove('open');
 }
 
+// ═══ ADMIN PANEL ═══
+function openAdminPanel() {
+  var isAdmin = NV_USER && NV_USER.email && NV_USER.email.toLowerCase() === 'naijaverify0@gmail.com';
+  if (!isAdmin) { showToast('Admin access only.'); return; }
+  document.getElementById('admin-modal-bg').classList.add('open');
+  adminShowTab('reviews');
+}
+function closeAdminPanel() {
+  document.getElementById('admin-modal-bg').classList.remove('open');
+}
+function adminShowTab(tab) {
+  document.getElementById('atab-reviews').style.background = tab==='reviews' ? '#0a3d2e' : '#f4f4f2';
+  document.getElementById('atab-reviews').style.color = tab==='reviews' ? '#fff' : '#0d1f17';
+  document.getElementById('atab-users').style.background = tab==='users' ? '#0a3d2e' : '#f4f4f2';
+  document.getElementById('atab-users').style.color = tab==='users' ? '#fff' : '#0d1f17';
+  var content = document.getElementById('admin-tab-content');
+  if (tab === 'reviews') {
+    try {
+      var reviews = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
+      if (!reviews.length) {
+        content.innerHTML = '<div style="text-align:center;padding:40px;color:#9a9a94;font-size:14px;">No reviews saved yet.</div>';
+        return;
+      }
+      var html = '<div style="font-size:12px;font-weight:700;color:#9a9a94;margin-bottom:12px;">' + reviews.length + ' review(s) stored</div>';
+      reviews.forEach(function(r) {
+        var tagColor = r.rtype==='Workplace' ? '#0d47a1' : r.rtype==='Book' ? '#e65100' : '#1b5e20';
+        html += '<div style="background:#f8f8f5;border-radius:10px;padding:14px;margin-bottom:10px;border-left:3px solid ' + tagColor + ';">' +
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">' +
+          '<div><div style="font-size:13px;font-weight:700;color:#0a3d2e;">' + r.org + '</div>' +
+          '<div style="font-size:11px;color:#9a9a94;margin-top:2px;">' +
+          '<span style="background:' + tagColor + ';color:#fff;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">' + r.rtype + '</span>' +
+          ' &bull; by <strong>' + r.uname + '</strong>' +
+          ' &bull; ' + new Date(r.date).toLocaleDateString('en-NG') + '</div></div>' +
+          '<button onclick="deleteReview(\'' + r.id + '\');adminShowTab(\'reviews\')" style="background:#c62828;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">&#128465; Delete</button></div>' +
+          '<div style="font-size:13px;color:#5a5a54;line-height:1.6;">' + r.txt + '</div>' +
+          '<div style="font-size:11px;color:#9a9a94;margin-top:6px;">&#11088; ' + (r.svc||'—') + '/5 &bull; NPS: ' + (r.nps||'—') + '/10</div>' +
+          '</div>';
+      });
+      content.innerHTML = html;
+    } catch(e) { content.innerHTML = '<div style="color:#c62828;">Error loading reviews.</div>'; }
+  } else {
+    try {
+      var users = JSON.parse(localStorage.getItem('NV_USERS') || '{}');
+      var keys = Object.keys(users);
+      if (!keys.length) {
+        content.innerHTML = '<div style="text-align:center;padding:40px;color:#9a9a94;font-size:14px;">No registered users yet.</div>';
+        return;
+      }
+      var html = '<div style="font-size:12px;font-weight:700;color:#9a9a94;margin-bottom:12px;">' + keys.length + ' registered user(s)</div>';
+      keys.forEach(function(email) {
+        var u = users[email];
+        html += '<div style="background:#f8f8f5;border-radius:10px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:14px;">' +
+          '<div style="width:40px;height:40px;border-radius:8px;background:#0a3d2e;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex-shrink:0;">' + (u.uname||'?').charAt(0).toUpperCase() + '</div>' +
+          '<div style="flex:1;">' +
+          '<div style="font-size:13px;font-weight:700;color:#0a3d2e;">' + u.name + '</div>' +
+          '<div style="font-size:11px;color:#9a9a94;">' + email + ' &bull; <span style="color:#c9a84c;font-weight:700;">@' + u.uname + '</span></div>' +
+          '<div style="font-size:11px;color:#9a9a94;">' + (u.state||'') + '</div></div></div>';
+      });
+      content.innerHTML = html;
+    } catch(e) { content.innerHTML = '<div style="color:#c62828;">Error loading users.</div>'; }
+  }
+}
+function adminClearAll() {
+  if (!confirm('Delete ALL reviews? This cannot be undone.')) return;
+  try { localStorage.setItem('NV_REVIEWS', '[]'); } catch(e) {}
+  var feed = document.getElementById('public-reviews-feed');
+  if (feed) {
+    // Keep only the 3 sample reviews (static HTML ones), remove dynamically added ones
+    var dynamic = feed.querySelectorAll('.pub-review-card[id^="rv_"]');
+    dynamic.forEach(function(c){ c.remove(); });
+  }
+  adminShowTab('reviews');
+  showToast('All user reviews cleared.');
+}
+
+// ═══ ADMIN ═══
+function refreshAdminUI() {
+  var isAdmin = NV_USER && NV_USER.email && NV_USER.email.toLowerCase() === 'naijaverify0@gmail.com';
+  var adminBtn = document.getElementById('admin-panel-btn');
+  if (adminBtn) adminBtn.style.display = isAdmin ? 'inline-block' : 'none';
+  // Refresh delete buttons on visible review cards
+  if (isAdmin) {
+    document.querySelectorAll('.pub-review-card').forEach(function(card) {
+      var rid = card.id;
+      if (!rid) return;
+      var existing = card.querySelector('.admin-del-btn');
+      if (!existing) {
+        var headerRight = card.querySelector('[style*="text-align:right"]');
+        if (headerRight) {
+          var delBtn = document.createElement('button');
+          delBtn.className = 'admin-del-btn';
+          delBtn.innerHTML = '&#128465; Delete';
+          delBtn.style.cssText = 'margin-top:6px;background:#c62828;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;display:block;';
+          delBtn.onclick = function(){ deleteReview(rid); };
+          headerRight.appendChild(delBtn);
+        }
+      }
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   initOrgs();
   var nl = document.getElementById('nl-home');
   if (nl) nl.classList.add('active');
+
+  // STEP 1: Restore session FIRST (so admin delete buttons render correctly)
+  try {
+    var session = localStorage.getItem('NV_SESSION');
+    if (session) {
+      NV_USER = JSON.parse(session);
+      var btn = document.getElementById('reg-nav-btn');
+      if (btn) btn.textContent = 'Hi, ' + NV_USER.name.split(' ')[0];
+      var lb = document.getElementById('logout-btn');
+      if (lb) lb.style.display = 'inline-block';
+    }
+  } catch(e) {}
+
+  // STEP 2: Load saved reviews from localStorage (now NV_USER is set, admin buttons will show)
+  try {
+    var savedReviews = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
+    // Remove duplicates by id
+    var seen = {};
+    savedReviews.forEach(function(r) {
+      if (!seen[r.id]) {
+        seen[r.id] = true;
+        addReviewToFeed(r.org, r.rtype, r.txt, r.uname, r.svc, r.prof, r.nps, r.id, true);
+      }
+    });
+  } catch(e) {}
+
+  // STEP 3: Show admin panel button if admin is logged in
+  refreshAdminUI();
 });
 </script>
 </body>
