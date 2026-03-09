@@ -1040,6 +1040,7 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
     <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
       <button onclick="adminShowTab('reviews')" id="atab-reviews" style="padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128172; All Reviews</button>
       <button onclick="adminShowTab('users')" id="atab-users" style="padding:8px 16px;background:#f4f4f2;color:#0d1f17;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128100; Registered Users</button>
+      <button onclick="adminShowTab('add')" id="atab-add" style="padding:8px 16px;background:#f4f4f2;color:#0d1f17;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#43; Add Review</button>
       <button onclick="adminClearAll()" style="padding:8px 16px;background:#c62828;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#128465; Clear All Reviews</button>
     </div>
     <div id="admin-tab-content"></div>
@@ -1469,6 +1470,61 @@ const NIGERIAN_BOOKS = [
 
 <script>
 var FPID = 'mdawoqkw';
+var SB_URL = 'https://wofpnfcihjtncvgmrgmx.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndvZnBuZmNpaGp0bmN2Z21yZ214Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDg2NjEsImV4cCI6MjA4ODYyNDY2MX0.MoMbjdatOlrKRUpr-ZGkPOcZ6iT__6EKaZTobtQFYcQ';
+
+// ═══ SUPABASE HELPERS ═══
+async function sbFetch(path, method, body) {
+  var m = method || 'GET';
+  var headers = {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  };
+  if (m === 'POST') headers['Prefer'] = 'return=representation';
+  if (m === 'DELETE') headers['Prefer'] = 'return=minimal';
+  var opts = { method: m, headers: headers, mode: 'cors' };
+  if (body) opts.body = JSON.stringify(body);
+  try {
+    var res = await fetch(SB_URL + path, opts);
+    if (res.status === 204 || res.status === 200 && m === 'DELETE') return true;
+    if (!res.ok) { var err = await res.text(); console.warn('SB error:', res.status, err); return null; }
+    var ct = res.headers.get('content-type') || '';
+    if (ct.includes('json')) return await res.json();
+    return true;
+  } catch(e) { console.warn('SB fetch error:', e); return null; }
+}
+
+async function sbLoadReviews() {
+  var data = await sbFetch('/rest/v1/reviews?select=*&is_visible=eq.true&order=created_at.desc&limit=50');
+  if (!data || !Array.isArray(data)) return;
+  var feed = document.getElementById('public-reviews-feed');
+  if (!feed) return;
+  // Remove existing dynamic cards to avoid dupes
+  feed.querySelectorAll('.pub-review-card[id^="rv_"]').forEach(function(c){ c.remove(); });
+  data.forEach(function(r) {
+    addReviewToFeed(r.org, r.rtype, r.txt, r.uname, r.svc, r.prof, r.nps, r.id, true);
+  });
+}
+
+async function sbSaveReview(reviewObj) {
+  return await sbFetch('/rest/v1/reviews', 'POST', reviewObj);
+}
+
+async function sbDeleteReview(rid) {
+  return await sbFetch('/rest/v1/reviews?id=eq.' + rid, 'DELETE');
+}
+
+async function sbSaveUser(userObj) {
+  return await sbFetch('/rest/v1/users', 'POST', userObj);
+}
+
+async function sbGetUser(email) {
+  var data = await sbFetch('/rest/v1/users?email=eq.' + encodeURIComponent(email) + '&select=*');
+  if (data && data.length > 0) return data[0];
+  return null;
+}
 var NV_USER = null;
 var NV_BOOK_REVIEWS = {};
 
@@ -1804,12 +1860,23 @@ async function submitReview(type) {
   }
 
   var reviewId = 'rv_' + Date.now();
+  var reviewObj = {
+    id: reviewId, org: org, rtype: rtype, txt: txt, uname: uname,
+    reviewer_email: NV_USER ? NV_USER.email : null,
+    svc: svcStars, prof: profStars, nps: nps, is_visible: true
+  };
+
+  // Save to Supabase — visible to ALL visitors on ALL devices instantly
+  sbSaveReview(reviewObj);
+
+  // Also save to localStorage as offline fallback
   try {
     var saved = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
-    saved.unshift({id:reviewId, org:org, rtype:rtype, txt:txt, uname:uname, svc:svcStars, prof:profStars, nps:nps, date:new Date().toISOString()});
-    if (saved.length > 50) saved = saved.slice(0,50);
+    saved.unshift(reviewObj);
+    if (saved.length > 100) saved = saved.slice(0,100);
     localStorage.setItem('NV_REVIEWS', JSON.stringify(saved));
   } catch(e) {}
+
   addReviewToFeed(org, rtype, txt, uname, svcStars, profStars, nps, reviewId, false);
   showToast('Review posted! Thank you for helping Nigeria! &#127881;');
   setTimeout(function(){ showPage('home'); }, 2200);
@@ -1857,6 +1924,9 @@ function deleteReview(rid) {
   if (!confirm('Delete this review? This cannot be undone.')) return;
   var card = document.getElementById(rid);
   if (card) card.remove();
+  // Delete from Supabase
+  sbDeleteReview(rid);
+  // Delete from localStorage
   try {
     var saved = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
     saved = saved.filter(function(r){ return r.id !== rid; });
@@ -2119,6 +2189,10 @@ async function doRegister() {
   } catch(e) {}
   NV_USER = {name:name, email:email, uname:uname};
   // Save user to localStorage so login can find their username
+  // Save to Supabase (so login works on any device)
+  sbSaveUser({email: email.toLowerCase(), name: name, uname: uname, state: state, pass_hash: btoa(pass)});
+
+  // Also save locally for fast login on same device
   try {
     var users = JSON.parse(localStorage.getItem('NV_USERS') || '{}');
     users[email.toLowerCase()] = {name:name, uname:uname, state:state, pass:btoa(pass)};
@@ -2134,36 +2208,51 @@ async function doRegister() {
   var lb = document.getElementById('logout-btn');
   if (lb) lb.style.display = 'inline-block';
 }
-function doLogin() {
-  var email = ((document.getElementById('lg-email')||{}).value||'').trim();
+async function doLogin() {
+  var email = ((document.getElementById('lg-email')||{}).value||'').trim().toLowerCase();
   var pass = (document.getElementById('lg-pass')||{}).value||'';
   if (!email.includes('@')) { showToast('Please enter a valid email'); return; }
   if (!pass) { showToast('Please enter your password'); return; }
+
+  showToast('Logging in...');
+  var found = null;
+
+  // 1. Try localStorage first (fast, same device)
   try {
     var users = JSON.parse(localStorage.getItem('NV_USERS') || '{}');
-    var found = users[email.toLowerCase()];
-    if (found) {
-      // Validate password
-      if (found.pass && found.pass !== btoa(pass)) {
-        showToast('Incorrect password. Please try again.'); return;
-      }
-      NV_USER = {name:found.name, email:email, uname:found.uname};
-    } else {
-      // Not registered on this device - use email prefix as fallback
-      NV_USER = {name:email.split('@')[0], email:email, uname:email.split('@')[0]};
-      showToast('Account not found on this device. Please register first.');
-      return;
+    if (users[email]) found = users[email];
+  } catch(e) {}
+
+  // 2. If not found locally, try Supabase (works on any device)
+  if (!found) {
+    var sbUser = await sbGetUser(email);
+    if (sbUser) {
+      found = {name: sbUser.name, uname: sbUser.uname, state: sbUser.state, pass: sbUser.pass_hash};
+      // Cache locally for next time
+      try {
+        var users = JSON.parse(localStorage.getItem('NV_USERS') || '{}');
+        users[email] = found;
+        localStorage.setItem('NV_USERS', JSON.stringify(users));
+      } catch(e) {}
     }
-  } catch(e) {
-    NV_USER = {name:email.split('@')[0], email:email, uname:email.split('@')[0]};
   }
+
+  if (!found) {
+    showToast('Account not found. Please register first.'); return;
+  }
+  if (found.pass && found.pass !== btoa(pass)) {
+    showToast('Incorrect password. Please try again.'); return;
+  }
+
+  NV_USER = {name: found.name, email: email, uname: found.uname};
   try { localStorage.setItem('NV_SESSION', JSON.stringify(NV_USER)); } catch(e) {}
-  showToast('Welcome back, ' + NV_USER.name.split(' ')[0] + '! Logged in as ' + NV_USER.uname);
+  showToast('Welcome back, ' + found.name.split(' ')[0] + '! Logged in as ' + found.uname);
   closeRegModal();
   var btn = document.getElementById('reg-nav-btn');
-  if (btn) btn.textContent = 'Hi, ' + NV_USER.name.split(' ')[0];
+  if (btn) btn.textContent = 'Hi, ' + found.name.split(' ')[0];
   var lb = document.getElementById('logout-btn');
   if (lb) lb.style.display = 'inline-block';
+  refreshAdminUI();
 }
 function doLogout() {
   NV_USER = null;
@@ -2228,11 +2317,35 @@ function closeAdminPanel() {
   document.getElementById('admin-modal-bg').classList.remove('open');
 }
 function adminShowTab(tab) {
-  document.getElementById('atab-reviews').style.background = tab==='reviews' ? '#0a3d2e' : '#f4f4f2';
-  document.getElementById('atab-reviews').style.color = tab==='reviews' ? '#fff' : '#0d1f17';
-  document.getElementById('atab-users').style.background = tab==='users' ? '#0a3d2e' : '#f4f4f2';
-  document.getElementById('atab-users').style.color = tab==='users' ? '#fff' : '#0d1f17';
+  ['reviews','users','add'].forEach(function(t) {
+    var btn = document.getElementById('atab-'+t);
+    if (btn) { btn.style.background = tab===t ? '#0a3d2e' : '#f4f4f2'; btn.style.color = tab===t ? '#fff' : '#0d1f17'; }
+  });
   var content = document.getElementById('admin-tab-content');
+  if (tab === 'add') {
+    content.innerHTML =
+      '<div style="background:#e8f5e9;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;color:#1b5e20;line-height:1.7;">' +
+      '&#128161; Use this to manually add any review you received by email (e.g. from a user who wasn\'t logged in). Copy the details from Gmail and paste below.</div>' +
+      '<div style="margin-bottom:12px;"><label style="display:block;font-size:12px;font-weight:700;color:#0d1f17;margin-bottom:5px;">Organization / Book Name *</label>' +
+      '<input id="adm-org" type="text" placeholder="e.g. Unity Bank" style="width:100%;padding:10px 13px;border:2px solid #e8e8e4;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;"></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">' +
+      '<div><label style="display:block;font-size:12px;font-weight:700;color:#0d1f17;margin-bottom:5px;">Review Type</label>' +
+      '<select id="adm-rtype" style="width:100%;padding:10px 13px;border:2px solid #e8e8e4;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;background:#fff;">' +
+      '<option value="Business">Business</option><option value="Workplace">Workplace</option><option value="Book">Book</option></select></div>' +
+      '<div><label style="display:block;font-size:12px;font-weight:700;color:#0d1f17;margin-bottom:5px;">Username</label>' +
+      '<input id="adm-uname" type="text" placeholder="e.g. Anonymous or LagosKemi4" style="width:100%;padding:10px 13px;border:2px solid #e8e8e4;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;"></div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;">' +
+      '<div><label style="display:block;font-size:12px;font-weight:700;color:#0d1f17;margin-bottom:5px;">Customer Service (1-5)</label>' +
+      '<input id="adm-svc" type="number" min="1" max="5" value="3" style="width:100%;padding:10px 13px;border:2px solid #e8e8e4;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;"></div>' +
+      '<div><label style="display:block;font-size:12px;font-weight:700;color:#0d1f17;margin-bottom:5px;">Professionalism (1-5)</label>' +
+      '<input id="adm-prof" type="number" min="1" max="5" value="3" style="width:100%;padding:10px 13px;border:2px solid #e8e8e4;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;"></div>' +
+      '<div><label style="display:block;font-size:12px;font-weight:700;color:#0d1f17;margin-bottom:5px;">NPS Score (0-10)</label>' +
+      '<input id="adm-nps" type="number" min="0" max="10" value="6" style="width:100%;padding:10px 13px;border:2px solid #e8e8e4;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;"></div></div>' +
+      '<div style="margin-bottom:16px;"><label style="display:block;font-size:12px;font-weight:700;color:#0d1f17;margin-bottom:5px;">Review Text *</label>' +
+      '<textarea id="adm-txt" rows="4" placeholder="Paste the review text from the email..." style="width:100%;padding:10px 13px;border:2px solid #e8e8e4;border-radius:8px;font-family:\'DM Sans\',sans-serif;font-size:13px;outline:none;resize:vertical;"></textarea></div>' +
+      '<button onclick="adminAddReview()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1e7a52,#0a3d2e);color:#fff;font-family:\'Playfair Display\',serif;font-size:16px;font-weight:700;border:none;border-radius:10px;cursor:pointer;">&#43; Post This Review to the Site</button>';
+    return;
+  }
   if (tab === 'reviews') {
     try {
       var reviews = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
@@ -2292,6 +2405,28 @@ function adminClearAll() {
   showToast('All user reviews cleared.');
 }
 
+function adminAddReview() {
+  var org = ((document.getElementById('adm-org')||{}).value||'').trim();
+  var txt = ((document.getElementById('adm-txt')||{}).value||'').trim();
+  var rtype = (document.getElementById('adm-rtype')||{}).value || 'Business';
+  var uname = ((document.getElementById('adm-uname')||{}).value||'').trim() || 'Anonymous';
+  var svc = parseInt((document.getElementById('adm-svc')||{}).value||'3');
+  var prof = parseInt((document.getElementById('adm-prof')||{}).value||'3');
+  var nps = (document.getElementById('adm-nps')||{}).value || '6';
+  if (!org) { showToast('Please enter the organization name'); return; }
+  if (!txt) { showToast('Please enter the review text'); return; }
+  var rid = 'rv_adm_' + Date.now();
+  try {
+    var saved = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
+    saved.unshift({id:rid, org:org, rtype:rtype, txt:txt, uname:uname, svc:svc, prof:prof, nps:nps, date:new Date().toISOString()});
+    localStorage.setItem('NV_REVIEWS', JSON.stringify(saved));
+  } catch(e) {}
+  addReviewToFeed(org, rtype, txt, uname, svc, prof, nps, rid, false);
+  showToast('Review added to site! ✅');
+  closeAdminPanel();
+  showPage('home');
+}
+
 // ═══ ADMIN ═══
 function refreshAdminUI() {
   var isAdmin = NV_USER && NV_USER.email && NV_USER.email.toLowerCase() === 'naijaverify0@gmail.com';
@@ -2335,18 +2470,32 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   } catch(e) {}
 
-  // STEP 2: Load saved reviews from localStorage (now NV_USER is set, admin buttons will show)
-  try {
-    var savedReviews = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
-    // Remove duplicates by id
-    var seen = {};
-    savedReviews.forEach(function(r) {
-      if (!seen[r.id]) {
-        seen[r.id] = true;
-        addReviewToFeed(r.org, r.rtype, r.txt, r.uname, r.svc, r.prof, r.nps, r.id, true);
-      }
-    });
-  } catch(e) {}
+  // STEP 2: Load reviews from Supabase (all devices see same reviews)
+  // Show loading indicator
+  var feed = document.getElementById('public-reviews-feed');
+  var loadingCard = document.createElement('div');
+  loadingCard.id = 'feed-loading';
+  loadingCard.style.cssText = 'text-align:center;padding:40px;color:#9a9a94;font-size:14px;';
+  loadingCard.innerHTML = '<div style="font-size:24px;margin-bottom:8px;">&#9203;</div>Loading reviews...';
+  if (feed) feed.insertBefore(loadingCard, feed.firstChild);
+
+  sbLoadReviews().then(function() {
+    var lc = document.getElementById('feed-loading');
+    if (lc) lc.remove();
+    // Refresh admin delete buttons after reviews load
+    refreshAdminUI();
+  }).catch(function() {
+    // Supabase failed — fall back to localStorage
+    var lc = document.getElementById('feed-loading');
+    if (lc) lc.remove();
+    try {
+      var savedReviews = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
+      var seen = {};
+      savedReviews.forEach(function(r) {
+        if (!seen[r.id]) { seen[r.id] = true; addReviewToFeed(r.org, r.rtype, r.txt, r.uname, r.svc, r.prof, r.nps, r.id, true); }
+      });
+    } catch(e) {}
+  });
 
   // STEP 3: Show admin panel button if admin is logged in
   refreshAdminUI();
