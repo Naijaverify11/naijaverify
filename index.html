@@ -183,6 +183,16 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
   .stat-chip{padding:8px 14px;}
   .hero-title{font-size:34px;}
 }
+<!-- Google Analytics -->
+<script async data-cfasync="false" src="https://www.googletagmanager.com/gtag/js?id=G-MJGY6737M7"></script>
+<script data-cfasync="false">
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-MJGY6737M7');
+</script>
+<!-- Google Search Console -->
+<meta name="google-site-verification" content="hkRprVVHRVxDygWJsH1_wk5yneHxQ6ffVM">
 </style>
 </head>
 <body>
@@ -519,6 +529,13 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
 
 <!-- ═══ PAGE: REVIEW ═══ -->
 <div class="page" id="page-review">
+  <!-- Login reminder banner - hidden if logged in -->
+  <div id="review-login-banner" style="background:#fffbeb;border-bottom:2px solid #f59e0b;padding:12px 20px;text-align:center;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+    <span style="font-size:16px;">⚠️</span>
+    <span style="font-size:13px;font-weight:600;color:#92400e;">Login or Register first so your review shows your username instead of Anonymous</span>
+    <button onclick="openRegModal('login')" style="background:#f59e0b;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Login</button>
+    <button onclick="openRegModal('register')" style="background:#0a3d2e;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Register</button>
+  </div>
   <div style="background:linear-gradient(135deg,var(--green-deep),#1e7a52);padding:40px 40px 32px;text-align:center;">
     <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:#fff;margin-bottom:8px;">Write a Review</div>
     <p style="font-size:14px;color:rgba(255,255,255,0.8);">Your honest experience drives real change in Nigeria.</p>
@@ -1752,6 +1769,11 @@ function showPage(p) {
   var pg = document.getElementById('page-' + p);
   if (pg) pg.classList.add('active');
   document.querySelectorAll('.nav-link').forEach(function(x){ x.classList.remove('active'); });
+  // Show/hide login banner on review page
+  if (p === 'review') {
+    var banner = document.getElementById('review-login-banner');
+    if (banner) banner.style.display = NV_USER ? 'none' : 'flex';
+  }
   var nl = document.getElementById('nl-' + p);
   if (nl) nl.classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
