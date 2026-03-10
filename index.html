@@ -448,6 +448,26 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
   .stat-chip{padding:8px 14px;}
   .hero-title{font-size:34px;}
 }
+
+/* ── COMMENTS ── */
+.comments-section{margin-top:14px;border-top:1px solid #e8e8e4;padding-top:12px;}
+.comment-card{background:#f8f8f5;border-radius:8px;padding:10px 14px;margin-bottom:8px;border-left:3px solid #e8e8e4;}
+.comment-card.business-reply{border-left-color:#c9a84c;background:#fffdf0;}
+.comment-card.admin-reply{border-left-color:#0a3d2e;background:#f0f7f4;}
+.comment-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.comment-avatar{font-size:11px;font-weight:700;color:#fff;background:#1e7a52;border-radius:5px;padding:2px 8px;}
+.comment-avatar.biz{background:#c9a84c;color:#0d1f17;}
+.comment-avatar.admin-av{background:#0a3d2e;}
+.comment-type-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;}
+.badge-biz{background:#fff3cd;color:#92400e;}
+.badge-admin{background:#e8f5e9;color:#1b5e20;}
+.comment-time{font-size:10px;color:#9a9a94;margin-left:auto;}
+.comment-body{font-size:13px;color:#3a3a34;line-height:1.6;}
+.comment-input-row{margin-top:10px;display:flex;gap:8px;}
+.comment-input-row input{flex:1;padding:8px 12px;border:1.5px solid #e8e8e4;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+.comment-input-row input:focus{border-color:#1e7a52;}
+.comment-submit-btn{padding:8px 16px;background:#0a3d2e;color:#fff;border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.toggle-comments-btn{font-size:12px;color:#1e7a52;background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;padding:4px 0;margin-top:8px;display:block;}
 </style>
 </head>
 <body>
@@ -1987,6 +2007,13 @@ function addReviewToFeed(org, rtype, txt, uname, svc, prof, nps, reviewId, fromS
   card.id = rid;
   card.style.borderLeft = '4px solid #1e7a52';
   if (!fromStorage) card.style.animation = 'fadeInUp 0.4s ease';
+  var commentInput =
+    '<div class="comment-input-row">' +
+    '<input type="text" id="comment-input-' + rid + '" placeholder="' +
+    (isAdmin ? '&#9881; Reply as Admin...' : '&#128172; Add a comment... (anonymous ok)') +
+    '" />' +
+    '<button class="comment-submit-btn" data-rid="' + rid + '" data-org="' + org.replace(/"/g,'&quot;') + '" onclick="submitComment(this.dataset.rid,this.dataset.org)">Post</button>' +
+    '</div>';
   card.innerHTML =
     '<div class="prc-header">' +
     '<div class="prc-avatar">' + (uname||'Anonymous') + '</div>' +
@@ -1997,18 +2024,23 @@ function addReviewToFeed(org, rtype, txt, uname, svc, prof, nps, reviewId, fromS
     '<div style="text-align:right;font-size:11px;">' +
     '<div style="color:#f59e0b;font-size:14px;">' + starsHtml + '</div>' +
     (nps && nps !== 'Not selected' ? '<div style="color:#9a9a94;">NPS: <strong>' + nps + '/10</strong></div>' : '') +
-    (isAdmin ? '<button onclick="deleteReview(&quot;' + rid + '&quot;)" style="margin-top:6px;background:#c62828;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">&#128465; Delete</button>' : '') +
+    (isAdmin ? '<button onclick="deleteReview(\'' + rid + '\')" class="admin-del-btn" style="margin-top:6px;background:#c62828;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">&#128465; Delete</button>' : '') +
     '</div></div>' +
     '<div class="prc-body">' + (txt||'') + '</div>' +
     ((svc||prof) ? '<div style="display:flex;gap:16px;margin-top:10px;font-size:12px;color:#5a5a54;">' +
     (svc ? '<span>Customer Service: ' + svc + '/5</span>' : '') +
     (prof ? '<span>Professionalism: ' + prof + '/5</span>' : '') +
-    '</div>' : '');
+    '</div>' : '') +
+    '<div class="comments-section" id="comments-' + rid + '">' +
+    '<div class="comments-list" id="comments-list-' + rid + '"></div>' +
+    commentInput +
+    '</div>';
   if (fromStorage) {
     feed.appendChild(card);
   } else {
     feed.insertBefore(card, feed.firstChild);
   }
+  loadComments(rid);
 }
 
 function deleteReview(rid) {
@@ -2395,6 +2427,77 @@ function showLegalModal(type) {
 function closeLegalModal() {
   var bg = document.getElementById('legal-modal-bg');
   if (bg) bg.classList.remove('open');
+}
+
+// ═══ COMMENTS SYSTEM ═══
+async function loadComments(reviewId) {
+  var list = document.getElementById('comments-list-' + reviewId);
+  if (!list) return;
+  var data = await sbFetch('/rest/v1/comments?review_id=eq.' + reviewId + '&is_visible=eq.true&order=created_at.asc');
+  if (!data || !data.length) return;
+  list.innerHTML = '';
+  data.forEach(function(c) { renderComment(list, c); });
+}
+
+function renderComment(container, c) {
+  var isAdmin = c.comment_type === 'admin_reply';
+  var isBiz = c.comment_type === 'business_reply';
+  var avatarClass = isAdmin ? 'admin-av' : isBiz ? 'biz' : '';
+  var badge = isAdmin ? '<span class="comment-type-badge badge-admin">&#9881; Admin</span>' :
+              isBiz ? '<span class="comment-type-badge badge-biz">&#127970; Business</span>' : '';
+  var time = new Date(c.created_at).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
+  var cardClass = isAdmin ? 'admin-reply' : isBiz ? 'business-reply' : '';
+  var isCurrentAdmin = NV_USER && NV_USER.email && NV_USER.email.toLowerCase() === 'naijaverify0@gmail.com';
+  var deleteBtn = isCurrentAdmin ? '<button data-cid="' + c.id + '" data-rid="' + c.review_id + '" onclick="deleteComment(this.dataset.cid,this.dataset.rid)" style="background:none;border:none;color:#c62828;cursor:pointer;font-size:11px;margin-left:6px;">&#128465;</button>' : '';
+  var div = document.createElement('div');
+  div.className = 'comment-card ' + cardClass;
+  div.id = 'cmt-' + c.id;
+  div.innerHTML =
+    '<div class="comment-header">' +
+    '<div class="comment-avatar ' + avatarClass + '">' + c.commenter_uname + '</div>' +
+    badge + deleteBtn +
+    '<span class="comment-time">' + time + '</span>' +
+    '</div>' +
+    '<div class="comment-body">' + c.body + '</div>';
+  container.appendChild(div);
+}
+
+async function submitComment(reviewId, org) {
+  var input = document.getElementById('comment-input-' + reviewId);
+  if (!input) return;
+  var body = input.value.trim();
+  if (!body) { showToast('Please write your comment'); return; }
+  var isAdmin = NV_USER && NV_USER.email && NV_USER.email.toLowerCase() === 'naijaverify0@gmail.com';
+  var isBiz = NV_USER && !isAdmin && org && NV_USER.uname &&
+    org.toLowerCase().replace(/[^a-z]/g,'').includes(NV_USER.uname.toLowerCase().replace(/[^a-z]/g,'').slice(0,4));
+  var ctype = isAdmin ? 'admin_reply' : isBiz ? 'business_reply' : 'comment';
+  var uname = NV_USER ? NV_USER.uname : 'Anonymous';
+  var comment = {
+    id: 'cmt_' + Date.now(),
+    review_id: reviewId,
+    commenter_uname: uname,
+    commenter_email: NV_USER ? (NV_USER.email || null) : null,
+    comment_type: ctype,
+    body: body,
+    is_visible: true
+  };
+  var result = await sbFetch('/rest/v1/comments', 'POST', comment);
+  if (result) {
+    var list = document.getElementById('comments-list-' + reviewId);
+    if (list) renderComment(list, comment);
+    input.value = '';
+    showToast(isAdmin ? '&#9881; Admin reply posted!' : isBiz ? '&#127970; Business reply posted!' : '&#128172; Comment posted!');
+  } else {
+    showToast('Could not post comment. Try again.');
+  }
+}
+
+async function deleteComment(commentId, reviewId) {
+  if (!confirm('Delete this comment?')) return;
+  await sbFetch('/rest/v1/comments?id=eq.' + commentId, 'DELETE');
+  var el = document.getElementById('cmt-' + commentId);
+  if (el) el.remove();
+  showToast('Comment deleted.');
 }
 
 // ═══ ADMIN PANEL ═══
