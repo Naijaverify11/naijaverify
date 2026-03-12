@@ -2013,7 +2013,14 @@ function addReviewToFeed(org, rtype, txt, uname, svc, prof, nps, reviewId, fromS
     (isAdmin ? '&#9881; Reply as Admin...' : '&#128172; Add a comment... (anonymous ok)') +
     '" />' +
     '<button class="comment-submit-btn" data-rid="' + rid + '" data-org="' + org.replace(/"/g,'&quot;') + '" onclick="submitComment(this.dataset.rid,this.dataset.org)">Post</button>' +
-    '</div>';
+    '</div>' +
+    (!NV_USER ?
+      '<div style="font-size:11px;color:#9a9a94;margin-top:5px;text-align:center;">' +
+      '&#128100; Commenting as <strong>Anonymous</strong> — ' +
+      '<span onclick="openRegModal(\'register\')" style="color:#1e7a52;cursor:pointer;font-weight:700;text-decoration:underline;">Register</span>' +
+      ' to show your name & build your Street Cred' +
+      '</div>'
+    : '');
   card.innerHTML =
     '<div class="prc-header">' +
     '<div class="prc-avatar">' + (uname||'Anonymous') + '</div>' +
