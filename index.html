@@ -491,12 +491,12 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
 <div class="ticker">
   <div class="ticker-inner">
     <span>&#127475;&#127468; Know the Real Gist Before You Pay</span>
-    <span>&#11088; 736+ Nigerian Organizations</span>
+    <span>&#11088; <span id="org-count-ticker">1059+</span> Nigerian Organizations</span>
     <span>&#128218; Book Nook — Discover Nigerian Literature</span>
     <span>&#127963; Review Government Services</span>
     <span>&#127970; Rate Banks, Hotels, Airlines &amp; More</span>
     <span>&#127475;&#127468; Know the Real Gist Before You Pay</span>
-    <span>&#11088; 736+ Nigerian Organizations</span>
+    <span>&#11088; <span id="org-count-ticker">1059+</span> Nigerian Organizations</span>
     <span>&#128218; Book Nook — Discover Nigerian Literature</span>
     <span>&#127963; Review Government Services</span>
     <span>&#127970; Rate Banks, Hotels, Airlines &amp; More</span>
@@ -517,7 +517,7 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
       <div class="search-results" id="search-results"></div>
     </div>
     <div class="stats-row">
-      <div class="stat-chip"><div class="stat-num">736+</div><div class="stat-lbl">Organizations</div></div>
+      <div class="stat-chip"><div class="stat-num" id="org-count-stat">1059+</div><div class="stat-lbl">Organizations</div></div>
       <div class="stat-chip"><div class="stat-num">47</div><div class="stat-lbl">Nigerian Books</div></div>
       <div class="stat-chip"><div class="stat-num">36</div><div class="stat-lbl">States Covered</div></div>
       <div class="stat-chip"><div class="stat-num">Free</div><div class="stat-lbl">Always</div></div>
@@ -2353,6 +2353,9 @@ const ORGS = [
   {name:"Konvene Africa",cat:"Tech",sub:"Virtual Events",city:"Lagos",type:"Private"},
   {name:"Aso Savings Nigeria",cat:"FinTech",sub:"Savings",city:"Abuja",type:"Private"},
 ];
+
+// Auto-update org count
+(function(){var c=ORGS.length+'+';['org-count-ticker','org-count-stat'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=c;});})();
 var UNIQUE_ORGS=[];
 const NIGERIAN_BOOKS = [
   // ── LITERARY FICTION ──
