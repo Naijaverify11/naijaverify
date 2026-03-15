@@ -2454,7 +2454,7 @@ async function sbLoadReviews() {
   // Remove existing dynamic cards to avoid dupes
   feed.querySelectorAll('.pub-review-card[id^="rv_"]').forEach(function(c){ c.remove(); });
   data.forEach(function(r) {
-    addReviewToFeed(r.org, r.rtype, r.txt, r.uname, r.svc, r.prof, r.nps, r.id, true);
+    addReviewToFeed(r.org, r.rtype, r.txt, r.uname, r.svc, r.prof, r.nps, r.id, true, r.created_at);
   });
 }
 
@@ -2818,7 +2818,8 @@ async function submitReview(type) {
   var reviewObj = {
     id: reviewId, org: org, rtype: rtype, txt: txt, uname: uname,
     reviewer_email: NV_USER ? NV_USER.email : null,
-    svc: svcStars, prof: profStars, nps: nps, is_visible: true
+    svc: svcStars, prof: profStars, nps: nps, is_visible: true,
+    created_at: new Date().toISOString()
   };
 
   // Save to Supabase — visible to ALL visitors on ALL devices instantly
@@ -2832,18 +2833,18 @@ async function submitReview(type) {
     localStorage.setItem('NV_REVIEWS', JSON.stringify(saved));
   } catch(e) {}
 
-  addReviewToFeed(org, rtype, txt, uname, svcStars, profStars, nps, reviewId, false);
+  addReviewToFeed(org, rtype, txt, uname, svcStars, profStars, nps, reviewId, false, reviewObj.created_at);
   showToast('Review posted! Thank you for helping Nigeria! &#127881;');
   setTimeout(function(){ showPage('home'); }, 2200);
 }
 
 // ═══ REVIEW FEED ═══
-function addReviewToFeed(org, rtype, txt, uname, svc, prof, nps, reviewId, fromStorage) {
+function addReviewToFeed(org, rtype, txt, uname, svc, prof, nps, reviewId, fromStorage, createdAt) {
   var feed = document.getElementById('public-reviews-feed');
   if (!feed) return;
   var tagClass = rtype === 'Workplace' ? 'prc-tag-work' : rtype === 'Book' ? 'prc-tag-book' : 'prc-tag-biz';
   var starsHtml = '⭐'.repeat(Math.max(1, parseInt(svc)||3));
-  var now = new Date().toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
+  var now = createdAt ? new Date(createdAt).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}) : new Date().toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'});
   var isAdmin = NV_USER && NV_USER.email && NV_USER.email.toLowerCase() === 'naijaverify0@gmail.com';
   var rid = reviewId || ('rv_' + Date.now());
   var card = document.createElement('div');
@@ -3537,7 +3538,7 @@ document.addEventListener('DOMContentLoaded', function() {
       var savedReviews = JSON.parse(localStorage.getItem('NV_REVIEWS') || '[]');
       var seen = {};
       savedReviews.forEach(function(r) {
-        if (!seen[r.id]) { seen[r.id] = true; addReviewToFeed(r.org, r.rtype, r.txt, r.uname, r.svc, r.prof, r.nps, r.id, true); }
+        if (!seen[r.id]) { seen[r.id] = true; addReviewToFeed(r.org, r.rtype, r.txt, r.uname, r.svc, r.prof, r.nps, r.id, true, r.created_at); }
       });
     } catch(e) {}
   });
