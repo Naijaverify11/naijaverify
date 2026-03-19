@@ -537,7 +537,7 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
         <button onclick="filterDir('Lifestyle')" style="padding:9px 18px;border-radius:20px;border:2px solid #e8e8e4;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#127834; Food &amp; Dining</button>
         <button onclick="filterDir('Hospitality')" style="padding:9px 18px;border-radius:20px;border:2px solid #e8e8e4;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#127968; Hotels</button>
         <button onclick="filterDir('Education')" style="padding:9px 18px;border-radius:20px;border:2px solid #e8e8e4;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">&#127891; Education</button>
-        <button onclick="showPage('directory')" style="padding:9px 18px;border-radius:20px;border:2px solid var(--green-deep);background:var(--green-deep);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">View All 736 &#8594;</button>
+        <button onclick="showPage('directory')" style="padding:9px 18px;border-radius:20px;border:2px solid var(--green-deep);background:var(--green-deep);color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">View All <span id="dir-view-all-count">1059</span> &#8594;</button>
       </div>
     </div>
   </div>
@@ -583,7 +583,7 @@ footer{background:var(--green-deep);color:rgba(255,255,255,0.8);padding:48px 40p
   <div style="background:linear-gradient(135deg,var(--green-deep),#1e7a52);padding:40px 40px 32px;">
     <div style="max-width:1100px;margin:0 auto;">
       <div style="font-family:'Playfair Display',serif;font-size:32px;font-weight:900;color:#fff;margin-bottom:8px;">Organization Directory</div>
-      <p style="font-size:14px;color:rgba(255,255,255,0.8);margin-bottom:20px;">Browse 736+ Nigerian organizations. Click any to rate and review.</p>
+      <p style="font-size:14px;color:rgba(255,255,255,0.8);margin-bottom:20px;">Browse <span id="dir-org-count">1059+</span> Nigerian organizations. Click any to rate and review.</p>
       <div style="position:relative;max-width:480px;">
         <input id="dir-search-input" type="text" placeholder="Search organizations..." oninput="renderOrgs()" style="width:100%;padding:13px 44px 13px 16px;border-radius:12px;border:none;font-family:'DM Sans',sans-serif;font-size:14px;outline:none;">
         <span style="position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none;">&#128269;</span>
@@ -2355,7 +2355,7 @@ const ORGS = [
 ];
 
 // Auto-update org count
-(function(){var c=ORGS.length+'+';['org-count-ticker','org-count-stat'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=c;});})();
+(function(){var c=ORGS.length+'+';['org-count-ticker','org-count-stat','dir-org-count'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=c;});var e2=document.getElementById('dir-view-all-count');if(e2)e2.textContent=ORGS.length;})();
 var UNIQUE_ORGS=[];
 const NIGERIAN_BOOKS = [
   // ── LITERARY FICTION ──
